@@ -149,6 +149,8 @@
     var y = window.scrollY;
     var p = Math.min(1, Math.max(0, y / geo.D));
     var e = p * p * (3 - 2 * p);                     // smoothstep
+    // at the end of the travel, the real nav text takes over from the overlay
+    document.documentElement.classList.toggle('name-docked', p >= 1);
     for (var i = 0; i < words.length; i++) {
       var g = geo.words[i];
       var size = lerp(g.size0, g.size1, e);
@@ -156,7 +158,11 @@
       var t = lerp(g.s.top - y, g.f.top, e) - lerp(g.off0.top, g.off1.top, e);
       words[i].style.fontSize = size + 'px';
       words[i].style.letterSpacing = lerp(g.ls0, g.ls1, e) + 'px';
-      if (e === 1) { x = Math.round(x); t = Math.round(t); }   // docked: snap, so it is as crisp as normal text
+      if (e > 0.995) {                                         // about to dock: land on whole device pixels,
+        var dpr = window.devicePixelRatio || 1;                // like normal text, so the handoff cannot shift
+        x = Math.round(x * dpr) / dpr;
+        t = Math.round(t * dpr) / dpr;
+      }
       words[i].style.transform = 'translate3d(' + x + 'px,' + t + 'px,0)';
     }
   }

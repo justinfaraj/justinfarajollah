@@ -479,8 +479,16 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
     padding: 0 1.5rem;
   }
 
-  /* Portrait first, not pinned: a pinned photo would eat a phone screen. */
-  .story-photo { order: -1; padding-top: 1.5rem; }
+  /* Same order as docbrianna.com on a phone: the words first, then the photo
+     directly beneath them, then the About text. The photo is not pinned (a
+     pinned photo would eat a phone screen). .story-text stops being a box so
+     the hero, the photo and the About text can be ordered as one list, and
+     the photo's flat bottom edge lands on the rule above About, so it stands
+     on a line instead of floating. */
+  .story-text { display: contents; }
+  .hero { order: 1; min-height: 0; padding: 2.25rem 0 1.5rem; }
+  .story-photo { order: 2; }
+  .about { order: 3; padding: 3rem 0 4rem; }
   .photo-pin {
     position: static;
     width: min(22rem, 90vw);
@@ -488,15 +496,6 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
     aspect-ratio: 1 / 1;
     margin: 0 auto;
   }
-  /* No pinning here, so the cut at the chest has no screen edge to sit on:
-     let it dissolve into the page instead. */
-  .photo-pin img {
-    -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
-  }
-
-  .hero { min-height: 0; padding: 2.25rem 0 3rem; }
-  .about { padding: 3rem 0 4rem; }
 
   .section { padding: 4rem 1.5rem; }
   .work-grid,
@@ -593,10 +592,16 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   line-height: normal;
   color: var(--ink);
   transform-origin: 0 0;
-  will-change: transform;
 }
 
 /* once script.js is driving the copy, the real h1 goes transparent (not
    hidden) so it keeps its place in the layout and stays readable by AT */
 .name-morph .name-float { display: block; }
 .name-morph .hero-name { color: transparent; }
+
+/* The moment the name reaches the nav, hand over to the real nav text: the
+   moving overlay is a floating layer that browsers draw slightly softer, and
+   the real text is exactly what the old nav name was, so it stays crisp. The
+   two sit at identical positions, so the swap is invisible. */
+.name-docked .name-float { visibility: hidden; }
+.name-docked .home .nav-brand { visibility: visible; }
