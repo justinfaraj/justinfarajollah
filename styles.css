@@ -554,3 +554,49 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 @media (max-width: 860px) {
   .vertical-label { display: none; }
 }
+
+/* ---------- HOME ONLY: hero name docks into the nav on scroll ----------
+   Experimental. To revert: drop the branch, or delete this block, the
+   .name-float div and the id/spans on the h1 in index.html, and the last IIFE
+   in script.js. */
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* the hero no longer slides in, because script.js measures where its text
+   sits and a transform mid-animation would throw that measurement off */
+.hero { animation: fadeIn 0.7s ease both; }
+
+.hero-name .nm { display: block; }
+
+/* the small name and the rule under the nav are gone on the home page; the
+   brand stays in the layout, invisible, as the target the big name docks to */
+.home .nav-brand { visibility: hidden; }
+.home .topnav { border-bottom: 0; }
+
+.name-float {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 60;
+  pointer-events: none;
+  display: none;
+  animation: fadeIn 0.7s ease both;
+}
+
+.name-float .nf-word {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  font-family: var(--serif);
+  font-weight: 700;
+  line-height: normal;
+  color: var(--ink);
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+/* once script.js is driving the copy, the real h1 goes transparent (not
+   hidden) so it keeps its place in the layout and stays readable by AT */
+.name-morph .name-float { display: block; }
+.name-morph .hero-name { color: transparent; }

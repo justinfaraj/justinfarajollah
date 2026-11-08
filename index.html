@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="home">
 
 <a class="skip-link" href="#main">Skip to content</a>
 
@@ -20,6 +20,12 @@
   <span class="vertical-label-layer vertical-label-ink"><span class="vertical-label-text">Home</span></span>
   <span class="vertical-label-layer vertical-label-white"><span class="vertical-label-text">Home</span></span>
 </div>
+
+<!-- Scroll-linked copy of the hero name: it starts exactly over the hero heading
+     and, as you scroll, rearranges onto one line and docks where the small nav
+     name used to be. script.js drives it; the real h1 stays in place for
+     screen readers. -->
+<div class="name-float" id="name-float" aria-hidden="true"><span class="nf-word">Justin</span><span class="nf-word">Farajollah</span></div>
 
 <header class="topnav">
   <div class="topnav-inner">
@@ -41,7 +47,7 @@
 
     <div class="story-text">
       <section class="hero" id="home" data-label="Home">
-        <h1 class="hero-name">Justin Farajollah</h1>
+        <h1 class="hero-name" id="hero-name"><span class="nm">Justin</span> <span class="nm">Farajollah</span></h1>
         <p class="hero-subheading">I build websites for small businesses</p>
         <p class="hero-tagline">Let's build yours.</p>
         <span class="hero-rule" aria-hidden="true"></span>
