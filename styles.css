@@ -408,7 +408,22 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   flex-direction: column;
   align-items: flex-start;
   gap: 0.9rem;
+  /* Same motion language as the rest of the site: fade up on load (staggered),
+     lift with a deeper shadow on hover. "backwards" fill, not "both", so the
+     finished animation does not pin the transform and block the hover lift. */
+  animation: fadeInUp 0.7s ease backwards;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
+
+.contact-card:nth-child(2) { animation-delay: 0.14s; }
+
+.contact-card:hover,
+.contact-card:focus-within {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 48px rgba(14, 26, 51, 0.16);
+}
+
+.contact-lede { animation: fadeInUp 0.7s ease 0.07s backwards; }
 
 .contact-card h2 {
   font-family: var(--serif);
