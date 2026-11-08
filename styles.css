@@ -1,0 +1,491 @@
+/* ==========================================================================
+   Justin Farajollah | web design for small businesses
+   --------------------------------------------------------------------------
+   Same bones as docbrianna.com (Playfair Display + Jost, alternating bands,
+   sticky nav, one square-cornered black button), with its own palette:
+     --ink    navy, ALL text, buttons, the closing band
+     --white  page background
+     --stone  warm wash for alternating sections (never used for text)
+   ========================================================================== */
+
+:root {
+  --white: #FFFFFF;
+  --ink: #0E1A33;
+  --stone: #F3F0EA;
+
+  --ink-soft: rgba(14, 26, 51, 0.74);
+  --rule: rgba(14, 26, 51, 0.14);
+  --shadow: 0 18px 40px rgba(14, 26, 51, 0.14);
+
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'Jost', Helvetica, Arial, sans-serif;
+
+  --nav-h: 4.5rem;
+  /* Portrait height: capped so it always fits on screen while pinned. */
+  --photo-h: min(32rem, calc(100svh - var(--nav-h) - 3rem));
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+html, body { margin: 0; padding: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+body {
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--white);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 100;
+  background: var(--ink);
+  color: var(--white);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+}
+.skip-link:focus { top: 1rem; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- BUTTONS & LINKS ---------- */
+
+.btn {
+  display: inline-block;
+  background: var(--ink);
+  color: var(--white);
+  padding: 1.05rem 2.2rem;
+  border-radius: 10px;
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: 2px solid var(--ink);
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease;
+}
+
+.btn:hover,
+.btn:focus-visible {
+  background: var(--stone);
+  color: var(--ink);
+  transform: translateY(-2px);
+}
+
+.btn-small { padding: 0.7rem 1.4rem; }
+
+/* Inverted button for the navy closing band */
+.btn-light {
+  background: var(--white);
+  color: var(--ink);
+  border-color: var(--white);
+}
+.btn-light:hover,
+.btn-light:focus-visible {
+  background: var(--stone);
+  border-color: var(--stone);
+}
+
+.text-link {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid var(--rule);
+  padding-bottom: 2px;
+  transition: border-color 0.2s ease;
+}
+a:hover > .text-link,
+a:focus-visible > .text-link,
+a.text-link:hover,
+a.text-link:focus-visible { border-bottom-color: var(--ink); }
+
+/* ---------- TOP NAV ---------- */
+
+.topnav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--white);
+  border-bottom: 1px solid var(--rule);
+}
+
+.topnav-inner {
+  max-width: 82rem;
+  margin: 0 auto;
+  min-height: var(--nav-h);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.nav-brand {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: 0.01em;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-link {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding-bottom: 3px;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.2s ease;
+}
+.nav-link:hover,
+.nav-link:focus-visible,
+.nav-link[aria-current="page"] { border-bottom-color: var(--ink); }
+
+/* ---------- SECTION SHELL ---------- */
+
+.section {
+  width: 100%;
+  background: var(--white);
+  padding: 5.5rem 2rem;
+}
+.section-stone { background: var(--stone); }
+.section-ink {
+  background: var(--ink);
+  color: var(--white);
+}
+
+.section-inner { max-width: 68rem; margin: 0 auto; }
+.section-inner-narrow { max-width: 46rem; }
+
+.section-heading {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(2.1rem, 3.6vw, 3.1rem);
+  line-height: 1.08;
+  margin: 0 0 1.75rem;
+  text-wrap: balance;
+}
+.section-heading-center { text-align: center; }
+
+.body-text {
+  font-size: 1.05rem;
+  line-height: 1.75;
+  margin: 0 0 1.25rem;
+  max-width: 40rem;
+}
+.body-text:last-child { margin-bottom: 0; }
+
+/* ---------- STORY: hero + about with the pinned portrait ----------
+   One two-column grid wraps BOTH the hero and the about text. The portrait
+   column stretches the full height of the row, and the image inside it is
+   position: sticky, so it travels with you until the About text ends and
+   then scrolls away with the rest of the block.
+   Do not put overflow: hidden/auto on any ancestor of .photo-pin; that
+   silently disables sticky. */
+
+.story {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
+  column-gap: clamp(2rem, 6vw, 6rem);
+  align-items: start;
+}
+
+.hero {
+  min-height: calc(100svh - var(--nav-h));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 3rem 0;
+  animation: fadeInUp 0.7s ease both;
+}
+
+.hero-name {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(2.9rem, 6.4vw, 5.2rem);
+  line-height: 1.02;
+  margin: 0 0 1.1rem;
+  text-wrap: balance;
+}
+
+.hero-subheading {
+  font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.4rem;
+}
+
+.hero-tagline {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(1.15rem, 1.8vw, 1.45rem);
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.hero-rule {
+  display: block;
+  width: 3.5rem;
+  height: 2px;
+  background: var(--ink);
+  margin: 2rem 0;
+}
+
+.about {
+  padding: 4rem 0 6rem;
+  border-top: 1px solid var(--rule);
+}
+
+.story-photo {
+  /* The grid uses align-items: start, so this cell must opt back in to
+     stretching. If it doesn't, it is only as tall as the photo and the
+     sticky image has no room to travel. */
+  align-self: stretch;
+  animation: fadeInUp 0.9s ease 0.1s both;
+}
+
+/* The portrait is a transparent cutout cropped at the chest, so it sits on a
+   stone panel with its bottom edge flush to the panel's bottom edge. The
+   panel is the sticky element; overflow: hidden here is fine because it is
+   on the sticky element itself, not on an ancestor of it. */
+.photo-pin {
+  position: sticky;
+  /* Centre the portrait in the visible area, from first paint onward. */
+  top: calc(var(--nav-h) + (100svh - var(--nav-h) - var(--photo-h)) / 2);
+  height: var(--photo-h);
+  background: var(--stone);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.photo-pin img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 100%;
+}
+
+/* ---------- PORTFOLIO ---------- */
+
+.work-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2.5rem;
+}
+
+.work-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.work-card h3 {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  margin: 1.1rem 0 0;
+}
+
+.work-card p {
+  margin: 0 0 0.9rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.work-card .text-link { align-self: flex-start; }
+
+.browser {
+  background: var(--white);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.work-card:hover .browser,
+.work-card:focus-visible .browser {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 48px rgba(14, 26, 51, 0.2);
+}
+
+.browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 0.9rem;
+  border-bottom: 1px solid var(--rule);
+}
+.browser-bar span {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--rule);
+}
+.browser-bar em {
+  font-style: normal;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  margin-left: 0.6rem;
+}
+
+.browser img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1600 / 763;
+  object-fit: cover;
+  object-position: top;
+}
+
+/* ---------- CLOSING CTA ---------- */
+
+.cta-section { text-align: center; padding: 6rem 2rem; }
+
+.cta-heading {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(2rem, 3.6vw, 3rem);
+  line-height: 1.12;
+  margin: 0 0 2rem;
+  text-wrap: balance;
+}
+
+/* ---------- CONTACT PAGE ---------- */
+
+.contact-lede {
+  text-align: center;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: -0.5rem auto 3rem;
+  max-width: 34rem;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2rem;
+  align-items: stretch;
+}
+
+.contact-card {
+  background: var(--stone);
+  border-radius: 14px;
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.9rem;
+}
+
+.contact-card h2 {
+  font-family: var(--serif);
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+.contact-card p {
+  margin: 0;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+
+.contact-card .btn { margin-top: auto; }
+
+.phone-number {
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--ink) !important;
+  letter-spacing: 0.01em;
+}
+
+/* Phones get the sms: button; desktops (where sms: does nothing useful)
+   get a copy-number button instead. */
+.sms-btn { display: none; }
+@media (hover: none) and (pointer: coarse) {
+  .sms-btn { display: inline-block; }
+  .copy-btn { display: none !important; }
+}
+
+.back-link { text-align: center; margin: 3rem 0 0; }
+
+/* ---------- FOOTER ---------- */
+
+.footer {
+  border-top: 1px solid var(--rule);
+  padding: 2rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+.footer p { margin: 0; }
+
+/* ---------- RESPONSIVE ---------- */
+
+@media (max-width: 860px) {
+  .topnav-inner { padding: 0 1.25rem; }
+  .nav-links { gap: 1.25rem; }
+
+  .story {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0 1.5rem;
+  }
+
+  /* Portrait first, not pinned: a pinned photo would eat a phone screen. */
+  .story-photo { order: -1; padding-top: 2rem; }
+  .photo-pin {
+    position: static;
+    width: min(20rem, 72vw);
+    height: auto;
+    aspect-ratio: 4 / 5;
+    margin: 0 auto;
+  }
+
+  .hero { min-height: 0; padding: 2.25rem 0 3rem; }
+  .about { padding: 3rem 0 4rem; }
+
+  .section { padding: 4rem 1.5rem; }
+  .work-grid,
+  .contact-grid { grid-template-columns: minmax(0, 1fr); }
+  .cta-section { padding: 4.5rem 1.5rem; }
+}
+
+@media (max-width: 480px) {
+  .nav-link-work { display: none; }
+  .nav-brand { font-size: 1.1rem; }
+}
