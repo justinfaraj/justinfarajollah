@@ -144,8 +144,10 @@
 
   function lerp(a, b, t) { return a + (b - a) * t; }
 
+  var phone = window.matchMedia('(max-width: 860px)');   // no animation on phones (see styles.css)
+
   function update() {
-    if (!geo) return;
+    if (!geo || phone.matches) return;
     var y = window.scrollY;
     var p = Math.min(1, Math.max(0, y / geo.D));
     var e = p * p * (3 - 2 * p);                     // smoothstep

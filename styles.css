@@ -605,3 +605,13 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
    two sit at identical positions, so the swap is invisible. */
 .name-docked .name-float { visibility: hidden; }
 .name-docked .home .nav-brand { visibility: visible; }
+
+/* ---------- PHONES: no name animation ----------
+   Below the stacked-layout breakpoint the big name just stays in the hero and
+   the small name sits in the nav as usual. Placed last so it wins over the
+   rules above. */
+@media (max-width: 860px) {
+  .name-morph .name-float { display: none; }
+  .name-morph .hero-name { color: var(--ink); }
+  .home .nav-brand { visibility: visible; }
+}
