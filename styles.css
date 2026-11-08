@@ -493,3 +493,49 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   .nav-link-work { display: none; }
   .nav-brand { font-size: 1.1rem; }
 }
+
+/* ---------- VERTICAL SECTION LABEL ----------
+   Fixed at the left edge; script.js swaps the word to whichever section is
+   crossing the middle of the screen. Two stacked copies (ink and white) are
+   clipped at the exact pixel where a navy band starts, so the word stays
+   readable while it straddles a boundary. The only transform on the wrapper
+   is a translate: the clipping is in screen pixels, so no ancestor may
+   rotate. The rotation lives on the text. */
+
+.vertical-label {
+  position: fixed;
+  top: 50%;
+  left: 1rem;
+  transform: translateY(-50%);
+  z-index: 40;
+  pointer-events: none;
+}
+
+.vertical-label-layer { display: block; }
+
+/* first copy gives the wrapper its size; the second sits exactly on top */
+.vertical-label-layer + .vertical-label-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.vertical-label-text {
+  display: block;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.vertical-label-ink .vertical-label-text { color: var(--ink-soft); }
+.vertical-label-white .vertical-label-text { color: var(--white); }
+
+/* until the first measurement lands, show only the ink copy */
+.vertical-label-white { clip-path: inset(50% 0 50% 0); }
+
+@media (max-width: 860px) {
+  .vertical-label { display: none; }
+}

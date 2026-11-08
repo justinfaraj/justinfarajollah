@@ -16,6 +16,11 @@
 
 <a class="skip-link" href="#main">Skip to content</a>
 
+<div class="vertical-label" id="section-label" aria-hidden="true">
+  <span class="vertical-label-layer vertical-label-ink"><span class="vertical-label-text">Home</span></span>
+  <span class="vertical-label-layer vertical-label-white"><span class="vertical-label-text">Home</span></span>
+</div>
+
 <header class="topnav">
   <div class="topnav-inner">
     <a class="nav-brand" href="index.html">Justin Farajollah</a>
@@ -35,7 +40,7 @@
   <div class="story">
 
     <div class="story-text">
-      <section class="hero" id="home">
+      <section class="hero" id="home" data-label="Home">
         <h1 class="hero-name">Justin Farajollah</h1>
         <p class="hero-subheading">I build websites for small businesses</p>
         <p class="hero-tagline">Let's build yours.</p>
@@ -43,7 +48,7 @@
         <a class="btn" href="contact.html">Contact me</a>
       </section>
 
-      <section class="about" id="about">
+      <section class="about" id="about" data-label="About">
         <h2 class="section-heading">Hi, I'm Justin</h2>
         <p class="body-text">
           I'm a student at Indiana University's Kelley School of Business, and I build websites for small businesses.
@@ -69,7 +74,7 @@
   </div>
 
   <!-- SECTION 3: RECENT WORK -->
-  <section class="section section-stone" id="work">
+  <section class="section section-stone" id="work" data-label="Work">
     <div class="section-inner">
       <h2 class="section-heading section-heading-center">Recent work</h2>
 
@@ -100,7 +105,7 @@
   </section>
 
   <!-- SECTION 4: CLOSING CTA -->
-  <section class="section section-ink cta-section" id="contact-cta">
+  <section class="section section-ink cta-section" id="contact-cta" data-label="Contact">
     <div class="section-inner section-inner-narrow">
       <h2 class="cta-heading">Ready for a website you're proud of?</h2>
       <a class="btn btn-light" href="contact.html">Let's talk</a>
@@ -113,5 +118,6 @@
   <p>&copy; 2026 Justin Farajollah</p>
 </footer>
 
+<script src="script.js"></script>
 </body>
 </html>
