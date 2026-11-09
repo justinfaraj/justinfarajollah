@@ -655,7 +655,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 
 .js .work-card {
   grid-area: 1 / 1;
-  width: min(34rem, 78vw);
+  width: var(--cw);
   transition:
     transform 1s cubic-bezier(0.22, 0.8, 0.3, 1),
     opacity 1s ease,
@@ -722,35 +722,46 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 
 .js .work-card:focus-visible { outline-offset: 6px; }
 
-/* controls */
+/* controls: plain arrows at the left and right sides of the screen, level
+   with the screenshots. No circle, border or fill; the carousel is centred in
+   the page, so 50% - 50vw puts them at the edges of the viewport. */
+.carousel { --cw: min(34rem, 78vw); }
+.js .carousel { position: relative; }
+
 .js .car-controls {
-  display: flex;
-  justify-content: center;
-  gap: 1.25rem;
-  margin-top: 1.5rem;
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  display: block;
+  pointer-events: none;
 }
 
 .car-arrow {
-  width: 3.1rem;
-  height: 3.1rem;
-  border-radius: 50%;
-  border: 2px solid var(--ink);
-  background: var(--white);
-  color: var(--ink);
+  position: absolute;
+  /* middle of the foreground screenshot: stage padding + half the browser window */
+  top: calc(2.25rem + (var(--cw) / 2.097 + 2.4rem) / 2 - 1.5rem);
+  z-index: 5;
+  width: 3rem;
+  height: 3rem;
   display: grid;
   place-items: center;
-  cursor: pointer;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
   padding: 0;
-  transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease, opacity 0.25s ease;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.25s ease, opacity 0.25s ease;
 }
-.car-arrow svg { width: 1.25rem; height: 1.25rem; }
-.car-arrow:hover:not(:disabled),
-.car-arrow:focus-visible:not(:disabled) {
-  background: var(--ink);
-  color: var(--white);
-  transform: translateY(-2px);
-}
-.car-arrow:disabled { opacity: 0.3; cursor: default; }
+.car-prev { left: calc(50% - 50vw + 1.5rem); }
+.car-next { right: calc(50% - 50vw + 1.5rem); }
+.car-arrow svg { width: 2.1rem; height: 2.1rem; }
+.car-prev:hover:not(:disabled),
+.car-prev:focus-visible:not(:disabled) { transform: translateX(-4px); }
+.car-next:hover:not(:disabled),
+.car-next:focus-visible:not(:disabled) { transform: translateX(4px); }
+.car-arrow:disabled { opacity: 0.25; cursor: default; }
 
 /* the live-region text is for screen readers only */
 .js .car-status {
@@ -767,7 +778,10 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 }
 
 @media (max-width: 860px) {
-  .js .work-card { width: min(34rem, 74vw); }
+  .carousel { --cw: min(34rem, 74vw); }
+  /* phones: hug the screen edge so the arrows stay off the front screenshot */
+  .car-prev { left: calc(50% - 50vw + 0.1rem); }
+  .car-next { right: calc(50% - 50vw + 0.1rem); }
   .js .work-card[data-pos="-1"] { transform: translateX(-70%) scale(0.78); }
   .js .work-card[data-pos="1"]  { transform: translateX(70%) scale(0.78); }
 }
