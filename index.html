@@ -25,7 +25,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
-<script>document.documentElement.classList.add("js")</script>
+<script>var c=document.documentElement.classList;c.add("js");if(!matchMedia("(prefers-reduced-motion: reduce)").matches)c.add("anim")</script>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body class="home">
@@ -44,6 +44,7 @@
 <div class="name-float" id="name-float" aria-hidden="true"><span class="nf-word">Justin</span><span class="nf-word">Farajollah</span></div>
 
 <header class="topnav">
+  <span class="nav-bg" aria-hidden="true"></span>
   <div class="topnav-inner">
     <a class="nav-brand" href="./">Justin Farajollah</a>
     <nav aria-label="Main">

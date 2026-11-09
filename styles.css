@@ -21,6 +21,8 @@
   --sans: 'Jost', Helvetica, Arial, sans-serif;
 
   --nav-h: 4.5rem;
+  /* phone portrait: a square, limited by width and, on short screens, by height */
+  --mphoto: min(22rem, 90vw, 42svh);
   /* Portrait is a square cutout; capped so it always fits under the nav. */
   --photo: min(36rem, 46vw, calc(100svh - var(--nav-h) - 1rem));
 }
@@ -143,6 +145,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 }
 
 .nav-brand {
+  white-space: nowrap;
   font-family: var(--serif);
   font-weight: 700;
   font-size: 1.25rem;
@@ -491,7 +494,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   .about { order: 3; padding: 3rem 0 4rem; }
   .photo-pin {
     position: static;
-    width: min(22rem, 90vw);
+    width: var(--mphoto);
     height: auto;
     aspect-ratio: 1 / 1;
     margin: 0 auto;
@@ -566,6 +569,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 .hero { animation: fadeIn 0.7s ease both; }
 
 .hero-name .nm { display: block; }
+.hero-name { letter-spacing: 0.01em; }
 
 /* the small name and the rule under the nav are gone on the home page; the
    brand stays in the layout, invisible, as the target the big name docks to */
@@ -592,6 +596,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   line-height: normal;
   color: var(--ink);
   transform-origin: 0 0;
+  will-change: transform;            /* drawn once at hero size, then only scaled and moved */
 }
 
 /* once script.js is driving the copy, the real h1 goes transparent (not
@@ -606,15 +611,6 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 .name-docked .name-float { visibility: hidden; }
 .name-docked .home .nav-brand { visibility: visible; }
 
-/* ---------- PHONES: no name animation ----------
-   Below the stacked-layout breakpoint the big name just stays in the hero and
-   the small name sits in the nav as usual. Placed last so it wins over the
-   rules above. */
-@media (max-width: 860px) {
-  .name-morph .name-float { display: none; }
-  .name-morph .hero-name { color: var(--ink); }
-  .home .nav-brand { visibility: visible; }
-}
 
 /* ---------- RECENT WORK: floating carousel ----------
    One project in the foreground with its neighbours behind it on either
@@ -722,6 +718,10 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 
 .js .work-card:focus-visible { outline-offset: 6px; }
 
+/* the drifting is paused whenever the carousel is off screen (script.js), so it
+   costs nothing while you are reading the rest of the page */
+.js .carousel.is-offscreen .float { animation-play-state: paused; }
+
 /* controls: plain arrows at the left and right sides of the screen, level
    with the screenshots. No circle, border or fill; the carousel is centred in
    the page, so 50% - 50vw puts them at the edges of the viewport. */
@@ -784,4 +784,45 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   .car-next { right: calc(50% - 50vw + 0.1rem); }
   .js .work-card[data-pos="-1"] { transform: translateX(-70%) scale(0.78); }
   .js .work-card[data-pos="1"]  { transform: translateX(70%) scale(0.78); }
+}
+
+/* ---------- PHONES: the name docks into a bar that is just the name ----------
+   Only when the animation is running (html.anim: JS on, reduced motion off).
+   The bar has nothing in it at first, so it takes no space and the hero fills
+   the whole screen; its white background fades in as the name arrives, and the
+   name is scaled up to span the full width of the bar. The Contact and Work
+   links are gone from the bar here; the hero and the closing band both have a
+   Contact button. Without the animation, phones keep the ordinary nav. */
+.nav-bg { display: none; }
+
+@media (max-width: 860px) {
+  /* ordinary nav keeps its small name when the animation is not running */
+  html:not(.anim) .home .nav-brand { visibility: visible; }
+
+  .anim .home .topnav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: transparent;
+  }
+  .anim .home .nav-bg {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background: var(--white);
+    opacity: 0;
+  }
+  .anim .home .topnav-inner { position: relative; }
+  /* the whole menu leaves the bar (not just its links), so no empty flex gap
+     is left beside the name, which would squeeze it onto two lines */
+  .anim .home .topnav-inner > nav { display: none; }
+  .anim .home .topnav-inner { gap: 0; }
+
+  /* hero plus photo fill the screen exactly: the photo is a square, so the
+     hero takes whatever height is left over */
+  .anim .home .hero {
+    min-height: calc(100svh - var(--mphoto));
+    padding-top: 4.75rem;
+  }
 }

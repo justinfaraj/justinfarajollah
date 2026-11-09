@@ -88,21 +88,31 @@
 })();
 
 // Home page: the large hero name rearranges onto one line and docks into the
-// nav as you scroll (see styles.css). Start and end positions are measured from
-// the real elements (the hero h1 and the invisible nav brand), so the docked
-// name lands exactly where the small nav name used to be.
+// top bar as you scroll (see styles.css). On desktop it lands where the small nav
+// name is; on phones it is scaled to span the whole bar.
+//
+// Built to stay smooth on phones: everything is measured ONCE (after fonts load,
+// and again only if the screen WIDTH changes, never for the address bar showing
+// and hiding). While scrolling, the only thing touched is the transform of two
+// elements, which the browser can draw without redoing layout. Font sizes are
+// never animated; the words are scaled instead.
 (function () {
   var float = document.getElementById('name-float');
   var h1 = document.getElementById('hero-name');
   var brand = document.querySelector('.nav-brand');
+  var navBg = document.querySelector('.nav-bg');
   if (!float || !h1 || !brand) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
+  var root = document.documentElement;
   var words = float.querySelectorAll('.nf-word');
   var spans = h1.querySelectorAll('.nm');
   var brandText = brand.firstChild;
-  var ends = [[0, 6], [7, 17]];          // "Justin" and "Farajollah" in "Justin Farajollah"
+  var ends = [[0, 6], [7, 17]];                 // "Justin" and "Farajollah" in "Justin Farajollah"
+  var phone = window.matchMedia('(max-width: 860px)');
   var geo = null;
+  var docked = false;
+  var lastWidth = window.innerWidth;
 
   function textRect(node, a, b) {
     var r = document.createRange();
@@ -111,61 +121,84 @@
     return r.getBoundingClientRect();
   }
 
-  // where a word's text box sits inside the overlay at a given size, so the
-  // overlay can be placed by its ink box rather than its element box
-  function inkOffset(word, size) {
-    word.style.fontSize = size + 'px';
-    word.style.transform = 'translate3d(0,0,0)';
-    var r = textRect(word.firstChild, 0, word.textContent.length);
-    return { left: r.left, top: r.top };
+  // On phones the docked name is sized to span the full width of the bar.
+  function fitBrandToBar() {
+    brand.style.fontSize = '';
+    if (!phone.matches) return;
+    var bar = brand.parentNode;
+    var cs = getComputedStyle(bar);
+    var avail = bar.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    var natural = textRect(brandText, 0, brandText.length).width;
+    var size = parseFloat(getComputedStyle(brand).fontSize) * avail / natural;
+    // capped so the bar stays slim on wide phones (landscape) and tablets, where
+    // filling the whole width would mean enormous type
+    size = Math.min(size, 56);
+    brand.style.fontSize = Math.floor(size * 10) / 10 + 'px';
   }
 
   function measure() {
+    fitBrandToBar();
     var sy = window.scrollY;
     var f1 = parseFloat(getComputedStyle(brand).fontSize);
     var next = { words: [], D: 0 };
     for (var i = 0; i < words.length; i++) {
-      var s = textRect(spans[i].firstChild, 0, spans[i].textContent.length);
-      var f = textRect(brandText, ends[i][0], ends[i][1]);
-      var f0 = parseFloat(getComputedStyle(spans[i]).fontSize);
+      var cs = getComputedStyle(spans[i]);
+      var f0 = parseFloat(cs.fontSize);
+      // the overlay word is drawn at the hero size and only ever scaled down
+      words[i].style.fontSize = f0 + 'px';
+      words[i].style.letterSpacing = cs.letterSpacing;
+      words[i].style.transform = 'none';
+      var ink = textRect(words[i].firstChild, 0, words[i].textContent.length);   // text box inside its element
+      var s = textRect(spans[i].firstChild, 0, spans[i].textContent.length);     // where it starts (hero)
+      var f = textRect(brandText, ends[i][0], ends[i][1]);                       // where it ends (bar)
       next.words.push({
-        s: { left: s.left, top: s.top + sy },        // document coordinates
-        f: { left: f.left, top: f.top },             // viewport coordinates (nav is pinned)
-        size0: f0, size1: f1,
-        ls0: parseFloat(getComputedStyle(spans[i]).letterSpacing) || 0,   // "normal" parses to NaN, i.e. 0
-        ls1: parseFloat(getComputedStyle(brand).letterSpacing) || 0,
-        off0: inkOffset(words[i], f0), off1: inkOffset(words[i], f1)
+        sx: s.left, sy: s.top + sy,       // start: left in viewport, top in document
+        fx: f.left, fy: f.top,            // end: viewport (the bar is pinned)
+        k: f1 / f0,                       // final scale
+        ox: ink.left, oy: ink.top
       });
     }
-    // scroll distance over which the first word travels up to the nav
-    next.D = Math.max(60, next.words[0].s.top - next.words[0].f.top);
+    // on one line, "Farajollah" starts this far right of "Justin" (in hero-size units)
+    next.words[1].adj = (next.words[1].fx - next.words[0].fx) / next.words[1].k;
+    // how far you scroll while the name travels; a short hero still gets a gentle animation
+    next.D = Math.max(phone.matches ? 120 : 60, next.words[0].sy - next.words[0].fy);
     geo = next;
   }
 
   function lerp(a, b, t) { return a + (b - a) * t; }
-
-  var phone = window.matchMedia('(max-width: 860px)');   // no animation on phones (see styles.css)
+  function clamp01(v) { return Math.min(1, Math.max(0, v)); }
+  function smooth(v) { return v * v * (3 - 2 * v); }       // smoothstep
 
   function update() {
-    if (!geo || phone.matches) return;
+    if (!geo) return;
     var y = window.scrollY;
     var p = Math.min(1, Math.max(0, y / geo.D));
-    var e = p * p * (3 - 2 * p);                     // smoothstep
-    // at the end of the travel, the real nav text takes over from the overlay
-    document.documentElement.classList.toggle('name-docked', p >= 1);
+    var e = smooth(p);
+    var dpr = window.devicePixelRatio || 1;
+    var firstLeft = 0;
     for (var i = 0; i < words.length; i++) {
       var g = geo.words[i];
-      var size = lerp(g.size0, g.size1, e);
-      var x = lerp(g.s.left, g.f.left, e) - lerp(g.off0.left, g.off1.left, e);
-      var t = lerp(g.s.top - y, g.f.top, e) - lerp(g.off0.top, g.off1.top, e);
-      words[i].style.fontSize = size + 'px';
-      words[i].style.letterSpacing = lerp(g.ls0, g.ls1, e) + 'px';
-      if (e > 0.995) {                                         // about to dock: land on whole device pixels,
-        var dpr = window.devicePixelRatio || 1;                // like normal text, so the handoff cannot shift
+      var sc = 1 + (g.k - 1) * e;
+      // "Farajollah" slides right first, along its own line, aiming for the spot
+      // just after wherever "Justin" currently ends (at the current size), and
+      // only then rises up beside it, so the two words never pass through each other
+      var ex = i === 1 ? smooth(clamp01(p / 0.55)) : e;
+      var ey = i === 1 ? smooth(clamp01((p - 0.25) / 0.75)) : e;
+      var left = i === 1 ? lerp(g.sx, firstLeft + sc * g.adj, ex) : lerp(g.sx, g.fx, ex);
+      if (i === 0) firstLeft = left;
+      var x = left - sc * g.ox;
+      var t = lerp(g.sy - y, g.fy, ey) - sc * g.oy;
+      if (p > 0.99) {                                      // about to dock: land on whole device pixels
         x = Math.round(x * dpr) / dpr;
         t = Math.round(t * dpr) / dpr;
       }
-      words[i].style.transform = 'translate3d(' + x + 'px,' + t + 'px,0)';
+      words[i].style.transform = 'translate3d(' + x + 'px,' + t + 'px,0) scale(' + sc + ')';
+    }
+    if (navBg) navBg.style.opacity = p;                    // phones: the bar fades in as the name arrives
+    var d = p >= 1;
+    if (d !== docked) {                                    // at the end the real nav text takes over (crisp)
+      docked = d;
+      root.classList.toggle('name-docked', d);
     }
   }
 
@@ -178,13 +211,20 @@
 
   function init() {
     // show the overlay first: a display:none element has no boxes to measure
-    document.documentElement.classList.add('name-morph');
+    root.classList.add('name-morph');
     measure();
     update();
   }
 
   window.addEventListener('scroll', schedule, { passive: true });
-  window.addEventListener('resize', function () { measure(); schedule(); });
+  window.addEventListener('resize', function () {
+    // phone browsers fire resize whenever the address bar shows or hides; only a
+    // real change of width (rotation, window resize) needs a re-measure
+    if (window.innerWidth === lastWidth) return;
+    lastWidth = window.innerWidth;
+    measure();
+    schedule();
+  });
 
   // measure only once the web fonts are in, since they change every width
   if (document.fonts && document.fonts.ready) {
@@ -260,6 +300,17 @@
     startX = null;
     if (Math.abs(dx) > 50) go(dx < 0 ? active + 1 : active - 1);
   }, { passive: true });
+
+  // pause the drifting while the carousel is off screen: saves battery and keeps
+  // scrolling smooth on the rest of the page
+  root.classList.add('is-offscreen');
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) { root.classList.toggle('is-offscreen', !entry.isIntersecting); });
+    }, { rootMargin: '120px 0px' }).observe(root);
+  } else {
+    root.classList.remove('is-offscreen');
+  }
 
   render();
 })();
