@@ -813,7 +813,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
     background: var(--white);
     opacity: 0;
   }
-  .anim .home .topnav-inner { position: relative; }
+  .anim .home .topnav-inner { position: relative; justify-content: center; }
   /* the whole menu leaves the bar (not just its links), so no empty flex gap
      is left beside the name, which would squeeze it onto two lines */
   .anim .home .topnav-inner > nav { display: none; }
@@ -826,3 +826,54 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
     padding-top: 4.75rem;
   }
 }
+
+/* ---------- NAME DOCKING MOTION (driven by script.js) ----------
+   Engine A (html.sd): scroll-driven animations. script.js writes the path as
+   @keyframes dock-w0 / dock-w1 and sets --dock-d, the number of pixels of
+   scrolling the trip takes. The browser ties the keyframes to the scroll position
+   and runs them on the compositor, so there is no per-frame JavaScript and
+   nothing to lag. Opacity swaps hand over to the real nav text at the very end,
+   so the final state is ordinary, crisp text. Scrolling above the top (rubber
+   band) cannot move it: the animation is clamped at its first frame.
+   Engine B (html.td): for browsers without scroll-driven animations. Crossing a
+   scroll threshold plays one timed transition to the docked state. */
+
+/* while script.js measures the overlay, its motion is switched off */
+.dock-measuring .nf-word { animation: none !important; transition: none !important; transform: none !important; }
+
+@keyframes dock-hide { 0%, 99.5% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes dock-show { 0%, 99.5% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes dock-bar  { from { opacity: 0; } to { opacity: 1; } }
+
+.sd .name-float {
+  animation: dock-hide linear both;
+  animation-timeline: scroll(root block);
+  animation-range: 0px var(--dock-d);
+}
+.sd .name-float .nf-word:nth-child(1) {
+  animation: dock-w0 linear both, fadeIn 0.7s ease both;
+  animation-timeline: scroll(root block), auto;
+  animation-range: 0px var(--dock-d), normal;
+}
+.sd .name-float .nf-word:nth-child(2) {
+  animation: dock-w1 linear both, fadeIn 0.7s ease both;
+  animation-timeline: scroll(root block), auto;
+  animation-range: 0px var(--dock-d), normal;
+}
+.sd .home .nav-brand {
+  visibility: visible;
+  pointer-events: none;          /* invisible until docked; it is only a stand-in for the heading */
+  animation: dock-show linear both;
+  animation-timeline: scroll(root block);
+  animation-range: 0px var(--dock-d);
+}
+.sd .nav-bg {
+  animation: dock-bar linear both;
+  animation-timeline: scroll(root block);
+  animation-range: 0px var(--dock-d);
+}
+
+.td .name-float .nf-word { transition: transform 0.55s cubic-bezier(0.3, 0.7, 0.2, 1); }
+.td .nav-bg { transition: opacity 0.35s ease; }
+.td.td-instant .name-float .nf-word,
+.td.td-instant .nav-bg { transition: none; }

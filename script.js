@@ -89,13 +89,19 @@
 
 // Home page: the large hero name rearranges onto one line and docks into the
 // top bar as you scroll (see styles.css). On desktop it lands where the small nav
-// name is; on phones it is scaled to span the whole bar.
+// name is; on phones it becomes the bar, two thirds of its width, centred.
 //
-// Built to stay smooth on phones: everything is measured ONCE (after fonts load,
-// and again only if the screen WIDTH changes, never for the address bar showing
-// and hiding). While scrolling, the only thing touched is the transform of two
-// elements, which the browser can draw without redoing layout. Font sizes are
-// never animated; the words are scaled instead.
+// Smoothness: scrolling happens on the browser's compositor thread, so any
+// animation driven from JavaScript scroll events is always a frame or more behind
+// it, which shows up as lag on phones. So the motion is NOT driven from JS:
+//   Engine A (scroll-driven animations): the path is measured once and handed to
+//     the browser as keyframes tied to the scroll position. It then runs entirely
+//     on the compositor, in lock-step with the scrolling, with no JS per frame.
+//   Engine B (browsers without that feature): scrolling past a small threshold
+//     plays a short timed animation to the docked state, and scrolling back to the
+//     top plays it in reverse. It is not scrubbed, but it cannot lag.
+// Only transforms and opacity are ever animated; font sizes never are. Above the
+// top of the page (rubber-band overscroll) the name stays put.
 (function () {
   var float = document.getElementById('name-float');
   var h1 = document.getElementById('hero-name');
@@ -110,9 +116,17 @@
   var brandText = brand.firstChild;
   var ends = [[0, 6], [7, 17]];                 // "Justin" and "Farajollah" in "Justin Farajollah"
   var phone = window.matchMedia('(max-width: 860px)');
+  var scrollDriven = !!(window.CSS && CSS.supports && CSS.supports('animation-timeline', 'scroll()'));
   var geo = null;
-  var docked = false;
   var lastWidth = window.innerWidth;
+  var keyframeSheet = null;
+  var docked = false;                            // Engine B state
+  var dockTimer = 0;
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function clamp01(v) { return Math.min(1, Math.max(0, v)); }
+  function smooth(v) { return v * v * (3 - 2 * v); }       // smoothstep
+  function r2(v) { return Math.round(v * 100) / 100; }
 
   function textRect(node, a, b) {
     var r = document.createRange();
@@ -121,33 +135,32 @@
     return r.getBoundingClientRect();
   }
 
-  // On phones the docked name is sized to span the full width of the bar.
+  // Phones: the docked name is two thirds of the width of the bar (centred by CSS).
   function fitBrandToBar() {
     brand.style.fontSize = '';
     if (!phone.matches) return;
     var bar = brand.parentNode;
-    var cs = getComputedStyle(bar);
-    var avail = bar.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    var avail = bar.clientWidth * 2 / 3;
     var natural = textRect(brandText, 0, brandText.length).width;
     var size = parseFloat(getComputedStyle(brand).fontSize) * avail / natural;
-    // capped so the bar stays slim on wide phones (landscape) and tablets, where
-    // filling the whole width would mean enormous type
+    // capped so the bar stays slim on wide phones (landscape) and tablets
     size = Math.min(size, 56);
     brand.style.fontSize = Math.floor(size * 10) / 10 + 'px';
   }
 
+  // Everything is measured once; none of this runs while scrolling.
   function measure() {
     fitBrandToBar();
     var sy = window.scrollY;
     var f1 = parseFloat(getComputedStyle(brand).fontSize);
     var next = { words: [], D: 0 };
+    root.classList.add('dock-measuring');        // switches the overlay's motion off while it is measured
     for (var i = 0; i < words.length; i++) {
       var cs = getComputedStyle(spans[i]);
       var f0 = parseFloat(cs.fontSize);
       // the overlay word is drawn at the hero size and only ever scaled down
       words[i].style.fontSize = f0 + 'px';
       words[i].style.letterSpacing = cs.letterSpacing;
-      words[i].style.transform = 'none';
       var ink = textRect(words[i].firstChild, 0, words[i].textContent.length);   // text box inside its element
       var s = textRect(spans[i].firstChild, 0, spans[i].textContent.length);     // where it starts (hero)
       var f = textRect(brandText, ends[i][0], ends[i][1]);                       // where it ends (bar)
@@ -158,6 +171,7 @@
         ox: ink.left, oy: ink.top
       });
     }
+    root.classList.remove('dock-measuring');
     // on one line, "Farajollah" starts this far right of "Justin" (in hero-size units)
     next.words[1].adj = (next.words[1].fx - next.words[0].fx) / next.words[1].k;
     // how far you scroll while the name travels; a short hero still gets a gentle animation
@@ -165,16 +179,11 @@
     geo = next;
   }
 
-  function lerp(a, b, t) { return a + (b - a) * t; }
-  function clamp01(v) { return Math.min(1, Math.max(0, v)); }
-  function smooth(v) { return v * v * (3 - 2 * v); }       // smoothstep
-
-  function update() {
-    if (!geo) return;
-    var y = window.scrollY;
-    var p = Math.min(1, Math.max(0, y / geo.D));
+  // Where both words are at progress p (0 = in the hero, 1 = docked in the bar).
+  function pose(p) {
     var e = smooth(p);
-    var dpr = window.devicePixelRatio || 1;
+    var y = p * geo.D;                           // scroll position this progress stands for
+    var out = [];
     var firstLeft = 0;
     for (var i = 0; i < words.length; i++) {
       var g = geo.words[i];
@@ -188,42 +197,75 @@
       if (i === 0) firstLeft = left;
       var x = left - sc * g.ox;
       var t = lerp(g.sy - y, g.fy, ey) - sc * g.oy;
-      if (p > 0.99) {                                      // about to dock: land on whole device pixels
-        x = Math.round(x * dpr) / dpr;
-        t = Math.round(t * dpr) / dpr;
-      }
-      words[i].style.transform = 'translate3d(' + x + 'px,' + t + 'px,0) scale(' + sc + ')';
+      out.push('translate3d(' + r2(x) + 'px,' + r2(t) + 'px,0) scale(' + Math.round(sc * 10000) / 10000 + ')');
     }
-    if (navBg) navBg.style.opacity = p;                    // phones: the bar fades in as the name arrives
-    var d = p >= 1;
-    if (d !== docked) {                                    // at the end the real nav text takes over (crisp)
-      docked = d;
-      root.classList.toggle('name-docked', d);
-    }
+    return out;
   }
 
-  var pending = false;
-  function schedule() {
-    if (pending) return;
-    pending = true;
-    requestAnimationFrame(function () { pending = false; update(); });
+  // ---- Engine A: scroll-driven animations (compositor, no JS while scrolling) ----
+  function buildScrollDriven() {
+    var N = 40;
+    var rows = [];
+    for (var j = 0; j <= N; j++) rows.push(pose(j / N));
+    if (!keyframeSheet) {
+      var st = document.createElement('style');
+      st.id = 'dock-keyframes';
+      document.head.appendChild(st);
+      keyframeSheet = st.sheet;
+    }
+    while (keyframeSheet.cssRules.length) keyframeSheet.deleteRule(0);
+    for (var i = 0; i < words.length; i++) {
+      var body = '';
+      for (var k = 0; k <= N; k++) body += r2(k * 100 / N) + '%{transform:' + rows[k][i] + '}';
+      keyframeSheet.insertRule('@keyframes dock-w' + i + '{' + body + '}', keyframeSheet.cssRules.length);
+    }
+    root.style.setProperty('--dock-d', geo.D + 'px');
+    root.classList.add('sd');
+  }
+
+  // ---- Engine B: timed animation triggered by scrolling past a threshold ----
+  function setDocked(on, instant) {
+    docked = on;
+    clearTimeout(dockTimer);
+    root.classList.toggle('td-instant', !!instant);
+    var pz = pose(on ? 1 : 0);
+    for (var i = 0; i < words.length; i++) words[i].style.transform = pz[i];
+    if (navBg) navBg.style.opacity = on ? 1 : 0;
+    if (on) {
+      if (instant) root.classList.add('name-docked');
+      else dockTimer = setTimeout(function () { root.classList.add('name-docked'); }, 520);   // real nav text takes over once it has landed
+    } else {
+      root.classList.remove('name-docked');
+    }
+    if (instant) { void float.offsetWidth; root.classList.remove('td-instant'); }
+  }
+
+  function setupTriggered() {
+    root.classList.add('td');
+    setDocked(window.scrollY > 10, true);
+    window.addEventListener('scroll', function () {
+      var y = window.scrollY;                    // negative while rubber-banding above the top: counts as "at the top"
+      if (!docked && y > 10) setDocked(true, false);
+      else if (docked && y < 2) setDocked(false, false);
+    }, { passive: true });
   }
 
   function init() {
     // show the overlay first: a display:none element has no boxes to measure
     root.classList.add('name-morph');
     measure();
-    update();
+    if (scrollDriven) buildScrollDriven();
+    else setupTriggered();
   }
 
-  window.addEventListener('scroll', schedule, { passive: true });
   window.addEventListener('resize', function () {
     // phone browsers fire resize whenever the address bar shows or hides; only a
     // real change of width (rotation, window resize) needs a re-measure
-    if (window.innerWidth === lastWidth) return;
+    if (window.innerWidth === lastWidth || !geo) return;
     lastWidth = window.innerWidth;
     measure();
-    schedule();
+    if (scrollDriven) buildScrollDriven();
+    else setDocked(docked, true);
   });
 
   // measure only once the web fonts are in, since they change every width
