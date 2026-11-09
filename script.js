@@ -193,3 +193,73 @@
     window.addEventListener('load', init);
   }
 })();
+
+// Recent work carousel (see styles.css). One project is in the foreground, its
+// neighbours sit behind it on either side. The list is not circular: when
+// there would be two cards on one side, only the nearest is shown and the other
+// is parked off the edge of the screen (data-pos -2 / 2).
+(function () {
+  var root = document.getElementById('work-carousel');
+  if (!root) return;
+
+  var cards = Array.prototype.slice.call(root.querySelectorAll('.work-card'));
+  var prev = root.querySelector('.car-prev');
+  var next = root.querySelector('.car-next');
+  var status = root.querySelector('.car-status');
+  var stage = root.querySelector('.car-stage');
+  var active = 0;
+  cards.forEach(function (c, i) { if (c.hasAttribute('aria-current')) active = i; });
+
+  function render() {
+    cards.forEach(function (card, i) {
+      var pos = Math.max(-2, Math.min(2, i - active));
+      var parked = Math.abs(pos) === 2;
+      card.setAttribute('data-pos', pos);
+      card.setAttribute('aria-hidden', parked ? 'true' : 'false');
+      card.tabIndex = parked ? -1 : 0;
+      if (i === active) card.setAttribute('aria-current', 'true');
+      else card.removeAttribute('aria-current');
+    });
+    prev.disabled = active === 0;
+    next.disabled = active === cards.length - 1;
+    status.textContent = 'Showing ' + cards[active].getAttribute('data-name') +
+      ', project ' + (active + 1) + ' of ' + cards.length;
+  }
+
+  function go(to) {
+    if (to < 0 || to > cards.length - 1 || to === active) return;
+    active = to;
+    render();
+  }
+
+  // a card behind the foreground comes forward; the foreground card is a
+  // normal link and takes you to the site
+  cards.forEach(function (card, i) {
+    card.addEventListener('click', function (e) {
+      if (i !== active) {
+        e.preventDefault();
+        go(i);
+      }
+    });
+  });
+
+  prev.addEventListener('click', function () { go(active - 1); });
+  next.addEventListener('click', function () { go(active + 1); });
+
+  root.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowLeft') { go(active - 1); }
+    else if (e.key === 'ArrowRight') { go(active + 1); }
+  });
+
+  // swipe on touch screens
+  var startX = null;
+  stage.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', function (e) {
+    if (startX === null) return;
+    var dx = e.changedTouches[0].clientX - startX;
+    startX = null;
+    if (Math.abs(dx) > 50) go(dx < 0 ? active + 1 : active - 1);
+  }, { passive: true });
+
+  render();
+})();

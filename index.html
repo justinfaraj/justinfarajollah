@@ -25,6 +25,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<script>document.documentElement.classList.add("js")</script>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body class="home">
@@ -48,7 +49,7 @@
     <nav aria-label="Main">
       <ul class="nav-links">
         <li class="nav-link-work"><a class="nav-link" href="#work">Work</a></li>
-        <li><a class="btn btn-small" href="contact.html">Contact</a></li>
+        <li><a class="btn btn-small" href="contact">Contact</a></li>
       </ul>
     </nav>
   </div>
@@ -66,7 +67,7 @@
         <p class="hero-subheading">I build websites for small businesses</p>
         <p class="hero-tagline">Let's build yours.</p>
         <span class="hero-rule" aria-hidden="true"></span>
-        <a class="btn" href="contact.html">Contact me</a>
+        <a class="btn" href="contact">Contact me</a>
       </section>
 
       <section class="about" id="about" data-label="About">
@@ -99,28 +100,55 @@
     <div class="section-inner">
       <h2 class="section-heading section-heading-center">Recent work</h2>
 
-      <div class="work-grid">
+      <!-- Floating carousel: one project in the foreground, its neighbours behind
+           and to either side. script.js sets data-pos (-2..2) on each card;
+           without JS the cards simply sit in a grid of plain links. -->
+      <div class="carousel" id="work-carousel" role="region" aria-roledescription="carousel" aria-label="Recent work">
+        <div class="car-stage">
 
-        <a class="work-card" href="https://docbrianna.com" target="_blank" rel="noopener noreferrer">
-          <div class="browser">
-            <div class="browser-bar" aria-hidden="true"><span></span><span></span><span></span><em>docbrianna.com</em></div>
-            <img src="images/work-docbrianna.webp" width="1600" height="763" loading="lazy" alt="Homepage of docbrianna.com">
+        <a class="work-card" data-pos="-1" data-name="Dr. Brianna Olamiju" href="https://docbrianna.com" target="_blank" rel="noopener noreferrer">
+          <div class="float">
+            <div class="browser">
+              <div class="browser-bar" aria-hidden="true"><span></span><span></span><span></span><em>docbrianna.com</em></div>
+              <img src="images/work-docbrianna.webp" width="1600" height="761" loading="lazy" alt="Homepage of docbrianna.com">
+            </div>
+            <h3>Dr. Brianna Olamiju</h3>
+            <p>Website for a medical and cosmetic dermatologist in New York City.</p>
+            <span class="text-link">Visit docbrianna.com &rarr;</span>
           </div>
-          <h3>Dr. Brianna Olamiju</h3>
-          <p>Website for a medical and cosmetic dermatologist in New York City.</p>
-          <span class="text-link">Visit docbrianna.com &rarr;</span>
         </a>
 
-        <a class="work-card" href="https://eaglepointcoaching.co" target="_blank" rel="noopener noreferrer">
-          <div class="browser">
-            <div class="browser-bar" aria-hidden="true"><span></span><span></span><span></span><em>eaglepointcoaching.co</em></div>
-            <img src="images/work-eaglepoint.webp" width="1600" height="763" loading="lazy" alt="Homepage of eaglepointcoaching.co">
+        <a class="work-card" data-pos="0" data-name="Ultimate AVI" aria-current="true" href="https://ultimateavi.net" target="_blank" rel="noopener noreferrer">
+          <div class="float">
+            <div class="browser">
+              <div class="browser-bar" aria-hidden="true"><span></span><span></span><span></span><em>ultimateavi.net</em></div>
+              <img src="images/work-ultimateavi.webp" width="1600" height="761" loading="lazy" alt="Homepage of ultimateavi.net">
+            </div>
+            <h3>Ultimate AVI</h3>
+            <p>Website for a smart home and AV integrator.</p>
+            <span class="text-link">Visit ultimateavi.net &rarr;</span>
           </div>
-          <h3>Eagle Point Coaching</h3>
-          <p>Website for an executive coaching practice.</p>
-          <span class="text-link">Visit eaglepointcoaching.co &rarr;</span>
         </a>
 
+        <a class="work-card" data-pos="1" data-name="Eagle Point Coaching" href="https://eaglepointcoaching.co" target="_blank" rel="noopener noreferrer">
+          <div class="float">
+            <div class="browser">
+              <div class="browser-bar" aria-hidden="true"><span></span><span></span><span></span><em>eaglepointcoaching.co</em></div>
+              <img src="images/work-eaglepoint.webp" width="1600" height="761" loading="lazy" alt="Homepage of eaglepointcoaching.co">
+            </div>
+            <h3>Eagle Point Coaching</h3>
+            <p>Website for an executive coaching practice.</p>
+            <span class="text-link">Visit eaglepointcoaching.co &rarr;</span>
+          </div>
+        </a>
+
+        </div>
+
+        <div class="car-controls">
+          <button class="car-arrow car-prev" type="button" aria-label="Show the previous project"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <button class="car-arrow car-next" type="button" aria-label="Show the next project"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+        </div>
+        <p class="car-status" aria-live="polite"></p>
       </div>
     </div>
   </section>
@@ -129,7 +157,7 @@
   <section class="section section-ink cta-section" id="contact-cta" data-label="Contact">
     <div class="section-inner section-inner-narrow">
       <h2 class="cta-heading">Ready for a website you're proud of?</h2>
-      <a class="btn btn-light" href="contact.html">Let's talk</a>
+      <a class="btn btn-light" href="contact">Let's talk</a>
     </div>
   </section>
 

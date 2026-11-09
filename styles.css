@@ -324,7 +324,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   color: var(--ink-soft);
 }
 
-.work-card .text-link { align-self: flex-start; }
+.work-card .text-link { align-self: center; }
 
 .browser {
   background: var(--white);
@@ -614,4 +614,160 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   .name-morph .name-float { display: none; }
   .name-morph .hero-name { color: var(--ink); }
   .home .nav-brand { visibility: visible; }
+}
+
+/* ---------- RECENT WORK: floating carousel ----------
+   One project in the foreground with its neighbours behind it on either
+   side. script.js gives every card data-pos: 0 is the foreground, -1 / 1 sit
+   beside it, and -2 / 2 are parked off the edge of the screen (only the
+   nearest neighbour on a side is ever shown). Each card has two layers: the
+   outer .work-card moves between positions, and the inner .float drifts on
+   its own very slow loop, so drifting never fights the sliding.
+   Without JS (no .js class) the cards are just a grid of links. */
+
+.car-stage {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 2.5rem;
+}
+
+.float {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  text-align: center;
+  width: 100%;
+}
+
+.car-controls,
+.car-status { display: none; }
+
+.js #work { overflow-x: clip; }        /* parked cards must not cause sideways scroll */
+
+.js .car-stage {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  align-items: center;
+  gap: 0;
+  padding: 2.25rem 0 1.25rem;
+}
+
+.js .work-card {
+  grid-area: 1 / 1;
+  width: min(34rem, 78vw);
+  transition:
+    transform 1s cubic-bezier(0.22, 0.8, 0.3, 1),
+    opacity 1s ease,
+    filter 1s ease,
+    visibility 0s linear 0s;
+}
+
+/* foreground */
+.js .work-card[data-pos="0"] {
+  transform: translateX(0) scale(1);
+  z-index: 3;
+}
+
+/* the two neighbours: smaller, a little dimmer, tucked behind the foreground */
+.js .work-card[data-pos="-1"],
+.js .work-card[data-pos="1"] {
+  z-index: 2;
+  opacity: 0.72;
+  filter: saturate(0.85);
+}
+.js .work-card[data-pos="-1"] { transform: translateX(-74%) scale(0.8); }
+.js .work-card[data-pos="1"]  { transform: translateX(74%) scale(0.8); }
+
+/* parked: slid fully off the side of the screen, unreachable until needed */
+.js .work-card[data-pos="-2"],
+.js .work-card[data-pos="2"] {
+  z-index: 1;
+  opacity: 0.4;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    transform 1s cubic-bezier(0.22, 0.8, 0.3, 1),
+    opacity 1s ease,
+    filter 1s ease,
+    visibility 0s linear 1s;
+}
+.js .work-card[data-pos="-2"] { transform: translateX(-100vw) scale(0.7); }
+.js .work-card[data-pos="2"]  { transform: translateX(100vw) scale(0.7); }
+
+/* Floating in water: tiny, slow, lopsided loops. Each card gets its own
+   path, length and starting point so they never move in step. */
+@keyframes float-a {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  25%      { transform: translate3d(3px, -9px, 0) rotate(0.45deg); }
+  50%      { transform: translate3d(-2px, -3px, 0) rotate(-0.35deg); }
+  75%      { transform: translate3d(-4px, -11px, 0) rotate(0.3deg); }
+}
+@keyframes float-b {
+  0%, 100% { transform: translate3d(0, -4px, 0) rotate(0.3deg); }
+  30%      { transform: translate3d(-4px, -12px, 0) rotate(-0.4deg); }
+  60%      { transform: translate3d(3px, -2px, 0) rotate(0.4deg); }
+  80%      { transform: translate3d(2px, -8px, 0) rotate(-0.2deg); }
+}
+@keyframes float-c {
+  0%, 100% { transform: translate3d(0, -7px, 0) rotate(-0.35deg); }
+  35%      { transform: translate3d(4px, -1px, 0) rotate(0.3deg); }
+  70%      { transform: translate3d(-3px, -10px, 0) rotate(-0.45deg); }
+}
+
+.js .work-card .float { animation: float-a 13s ease-in-out infinite; }
+.js .work-card:nth-child(2) .float { animation-name: float-b; animation-duration: 16s; animation-delay: -6s; }
+.js .work-card:nth-child(3) .float { animation-name: float-c; animation-duration: 11s; animation-delay: -3s; }
+.js .work-card:nth-child(1) .float { animation-delay: -9s; }
+
+.js .work-card:focus-visible { outline-offset: 6px; }
+
+/* controls */
+.js .car-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.car-arrow {
+  width: 3.1rem;
+  height: 3.1rem;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease, opacity 0.25s ease;
+}
+.car-arrow svg { width: 1.25rem; height: 1.25rem; }
+.car-arrow:hover:not(:disabled),
+.car-arrow:focus-visible:not(:disabled) {
+  background: var(--ink);
+  color: var(--white);
+  transform: translateY(-2px);
+}
+.car-arrow:disabled { opacity: 0.3; cursor: default; }
+
+/* the live-region text is for screen readers only */
+.js .car-status {
+  display: block;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 860px) {
+  .js .work-card { width: min(34rem, 74vw); }
+  .js .work-card[data-pos="-1"] { transform: translateX(-70%) scale(0.78); }
+  .js .work-card[data-pos="1"]  { transform: translateX(70%) scale(0.78); }
 }
