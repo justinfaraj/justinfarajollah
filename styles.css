@@ -45,6 +45,9 @@ body {
 }
 
 a { color: inherit; text-decoration: none; }
+
+/* in-page links land below the sticky nav */
+[id] { scroll-margin-top: var(--nav-h); }
 img { max-width: 100%; }
 [hidden] { display: none !important; }
 
@@ -301,13 +304,99 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   object-fit: contain;
 }
 
-/* ---------- PORTFOLIO ---------- */
+/* ---------- SERVICES ---------- */
 
-.work-grid {
+.section-lede {
+  text-align: center;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: -0.5rem auto 3rem;
+  max-width: 34rem;
+}
+
+.service-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2.5rem;
+  gap: 1.75rem;
 }
+
+.service-card {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 2rem 2rem 2.25rem;
+  border-top: 2px solid var(--ink);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.service-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow);
+}
+.service-card h3 {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  margin: 0 0 0.6rem;
+}
+.service-card p {
+  margin: 0;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+
+/* ---------- HOW IT WORKS ---------- */
+
+.steps {
+  list-style: none;
+  margin: 3rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+}
+.step {
+  position: relative;
+  text-align: center;
+  padding: 0 0.5rem;
+}
+/* connector line, running from this circle to the next one */
+.step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: 1.625rem;
+  left: 50%;
+  width: calc(100% + 2rem);
+  height: 1px;
+  background: var(--rule);
+}
+.step-num {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin: 0 auto 1.25rem;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--white);
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.step h3 {
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  margin: 0 0 0.5rem;
+}
+.step p {
+  margin: 0 auto;
+  max-width: 17rem;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+.steps-cta { text-align: center; margin: 3rem 0 0; }
+
+/* ---------- PORTFOLIO ---------- */
 
 .work-card {
   display: flex;
@@ -464,12 +553,53 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 
 .footer {
   border-top: 1px solid var(--rule);
-  padding: 2rem;
-  text-align: center;
+  padding: 3rem 2rem 2rem;
   font-size: 0.85rem;
   color: var(--ink-soft);
 }
 .footer p { margin: 0; }
+
+.footer-inner {
+  max-width: 68rem;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+.footer-name {
+  display: inline-block;
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--ink);
+  margin-bottom: 0.35rem;
+}
+.footer-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 1.75rem;
+}
+.footer-nav a {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  padding-bottom: 3px;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.2s ease;
+}
+.footer-nav a:hover,
+.footer-nav a:focus-visible { border-bottom-color: var(--ink); }
+.footer-copy {
+  max-width: 68rem;
+  margin: 2.5rem auto 0 !important;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+}
 
 /* ---------- RESPONSIVE ---------- */
 
@@ -501,13 +631,23 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   }
 
   .section { padding: 4rem 1.5rem; }
-  .work-grid,
-  .contact-grid { grid-template-columns: minmax(0, 1fr); }
+  .contact-grid,
+  .service-grid { grid-template-columns: minmax(0, 1fr); }
   .cta-section { padding: 4.5rem 1.5rem; }
+
+  .steps { grid-template-columns: minmax(0, 1fr); gap: 2.25rem; }
+  .step:not(:last-child)::before { display: none; }
+
+  .footer { padding: 2.5rem 1.5rem 1.75rem; }
+  .footer-inner { flex-direction: column; gap: 1.5rem; }
+  .footer-nav ul { flex-wrap: wrap; gap: 0.75rem 1.5rem; }
+}
+
+@media (max-width: 700px) {
+  .nav-sec { display: none; }
 }
 
 @media (max-width: 480px) {
-  .nav-link-work { display: none; }
   .nav-brand { font-size: 1.1rem; }
 }
 
