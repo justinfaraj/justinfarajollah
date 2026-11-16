@@ -7,37 +7,41 @@
 <meta name="description" content="Justin Farajollah builds websites for small businesses. See recent work and book a chat.">
 <meta name="theme-color" content="#0E1A33">
 <link rel="canonical" href="https://justinfarajollah.com/">
-<link rel="icon" href="favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="/favicon.ico?v=2" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=2">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Justin Farajollah">
 <meta property="og:title" content="Justin Farajollah">
 <meta property="og:description" content="I build websites for small businesses.">
 <meta property="og:url" content="https://justinfarajollah.com/">
-<meta property="og:image" content="https://justinfarajollah.com/images/og-image.png">
+<meta property="og:image" content="https://justinfarajollah.com/images/og-image.png?v=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Justin Farajollah">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:alt" content="Justin Farajollah: I build websites for small businesses">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Justin Farajollah">
 <meta name="twitter:description" content="I build websites for small businesses.">
-<meta name="twitter:image" content="https://justinfarajollah.com/images/og-image.png">
+<meta name="twitter:image" content="https://justinfarajollah.com/images/og-image.png?v=2">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "ProfessionalService",
   "name": "Justin Farajollah",
   "url": "https://justinfarajollah.com/",
-  "image": "https://justinfarajollah.com/images/og-image.png",
+  "image": "https://justinfarajollah.com/images/og-image.png?v=2",
   "description": "Justin Farajollah builds websites for small businesses.",
   "telephone": "+1-516-729-4010",
+  "email": "hello@justinfarajollah.com",
   "serviceType": "Web design"
 }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Jost:wght@400;500&display=swap" rel="stylesheet">
 <script>var c=document.documentElement.classList;c.add("js");if(!matchMedia("(prefers-reduced-motion: reduce)").matches)c.add("anim")</script>
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -81,7 +85,7 @@
       <section class="hero" id="home" data-label="Home">
         <h1 class="hero-name" id="hero-name"><span class="nm">Justin</span> <span class="nm">Farajollah</span></h1>
         <p class="hero-subheading">I build websites for small businesses</p>
-        <p class="hero-tagline">Let's build yours.</p>
+        <p class="hero-tagline">Let's build yours</p>
         <span class="hero-rule" aria-hidden="true"></span>
         <a class="btn" href="contact">Contact me</a>
       </section>
@@ -97,8 +101,8 @@
           is still my favorite part.
         </p>
         <p class="body-text">
-          If you need a site, or the one you have isn't pulling its weight, book a chat or send me a text and
-          we'll talk through it.
+          If you need a site, or the one you have isn't pulling its weight, book a chat, send me a text or
+          email me, and we'll talk through it.
         </p>
       </section>
     </div>
@@ -120,19 +124,19 @@
       <div class="service-grid">
         <article class="service-card">
           <h3>Design</h3>
-          <p>A clean, professional look that fits your business and makes a good first impression, on phones and computers.</p>
+          <p>A look that fits your business and makes a good first impression, on phones and computers.</p>
         </article>
         <article class="service-card">
           <h3>Build</h3>
           <p>A fast, simple site with the pages and information your customers are actually looking for.</p>
         </article>
         <article class="service-card">
-          <h3>Writing help</h3>
-          <p>Not sure what to say? I'll help you shape the words so your site sounds like you and is easy to read.</p>
-        </article>
-        <article class="service-card">
           <h3>Launch and changes</h3>
           <p>I get it live on your own address, and you can reach me if you need something updated later.</p>
+        </article>
+        <article class="service-card">
+          <h3>One-off projects</h3>
+          <p>Just need one piece? I also take on smaller projects like SEO, AI&nbsp;search optimization, logo design and more.</p>
         </article>
       </div>
     </div>
@@ -143,11 +147,16 @@
     <div class="section-inner">
       <h2 class="section-heading section-heading-center">How it works</h2>
 
+      <!-- The line joining the circles. Without JS (or with reduced motion) it is
+           drawn by CSS; with motion on, script.js draws it here as a string
+           that follows the circles and can be plucked. -->
+      <div class="steps-wrap">
+      <svg class="steps-string" aria-hidden="true" focusable="false"></svg>
       <ol class="steps">
         <li class="step">
           <span class="step-num" aria-hidden="true">1</span>
           <h3>We talk</h3>
-          <p>Book a chat or send a text. Tell me about your business and what you want the site to do.</p>
+          <p>Book a chat, send a text or email me. Tell me about your business and what you want the site to do.</p>
         </li>
         <li class="step">
           <span class="step-num" aria-hidden="true">2</span>
@@ -160,6 +169,7 @@
           <p>I build and launch the site, and you have a website you're proud to share.</p>
         </li>
       </ol>
+      </div>
 
       <p class="steps-cta"><a class="btn" href="contact">Start with a chat</a></p>
     </div>
@@ -183,7 +193,7 @@
               <img src="images/work-ultimateavi.webp" width="1600" height="761" loading="lazy" alt="Screenshot of the ultimateavi.net homepage, a website for a smart home and AV integrator">
             </div>
             <h3>Ultimate AVI</h3>
-            <p>Website for a smart home and AV integrator.</p>
+            <p>Website for a smart home and AV integrator</p>
             <span class="text-link">Visit ultimateavi.net &rarr;</span>
           </div>
         </a>
@@ -195,7 +205,7 @@
               <img src="images/work-docbrianna.webp" width="1600" height="761" loading="lazy" alt="Screenshot of the docbrianna.com homepage, a website for a medical and cosmetic dermatologist">
             </div>
             <h3>Dr. Brianna Olamiju</h3>
-            <p>Website for a medical and cosmetic dermatologist.</p>
+            <p>Website for a medical and cosmetic dermatologist</p>
             <span class="text-link">Visit docbrianna.com &rarr;</span>
           </div>
         </a>
@@ -207,7 +217,7 @@
               <img src="images/work-eaglepoint.webp" width="1600" height="761" loading="lazy" alt="Screenshot of the eaglepointcoaching.co homepage, a website for an executive coaching practice">
             </div>
             <h3>Eagle Point Coaching</h3>
-            <p>Website for an executive coaching practice.</p>
+            <p>Website for an executive coaching practice</p>
             <span class="text-link">Visit eaglepointcoaching.co &rarr;</span>
           </div>
         </a>
@@ -215,8 +225,8 @@
         </div>
 
         <div class="car-controls">
-          <button class="car-arrow car-prev" type="button" aria-label="Show the previous project"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
-          <button class="car-arrow car-next" type="button" aria-label="Show the next project"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+          <button class="car-arrow car-prev" type="button" aria-label="Show the previous project"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <button class="car-arrow car-next" type="button" aria-label="Show the next project"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
         </div>
         <p class="car-status" aria-live="polite"></p>
       </div>
@@ -237,7 +247,8 @@
   <div class="footer-inner">
     <div class="footer-brand">
       <a class="footer-name" href="./">Justin Farajollah</a>
-      <p>Websites for small businesses.</p>
+      <p>Websites for small businesses</p>
+      <a class="text-link footer-email" href="mailto:hello@justinfarajollah.com">hello@justinfarajollah.com</a>
     </div>
     <nav class="footer-nav" aria-label="Footer">
       <ul>
