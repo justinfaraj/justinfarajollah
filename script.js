@@ -125,8 +125,13 @@
   var whiteLayer = label.querySelector('.vertical-label-white');
   var darkBands = document.querySelectorAll('.section-ink');
 
+  // (only touches the page when the value actually changes: this runs on every
+  // scrolled frame, and almost every frame the answer is the same as the last)
   function clipTo(layer, top, bottom) {
-    layer.style.clipPath = 'inset(' + top + 'px 0 ' + bottom + 'px 0)';
+    var value = 'inset(' + top + 'px 0 ' + bottom + 'px 0)';
+    if (layer._clip === value) return;
+    layer._clip = value;
+    layer.style.clipPath = value;
   }
 
   // The side index (desktop navigation, see styles.css) rides on this block:
@@ -755,22 +760,33 @@
 
     // reduced motion keeps the stacking but not the shrinking; so does the plain
     // list (no JS layout on very short screens), where nothing is pinned
-    var still = reduce.matches || getComputedStyle(items[0]).position !== 'sticky';
+    var still = reduce.matches || !pinned;
 
     var scrollY = window.scrollY;
     var wrapperTopAbs = scrollY + rect.top;
     var itemHeight = items[0].clientHeight;
 
     for (var i = 0; i < count; i++) {
-      if (still) { cards[i].style.transform = ''; continue; }
-      // card i starts shrinking when its natural (un-pinned) top reaches the
-      // middle of the screen and is done when its natural bottom gets there
-      var target = 1 - (count - i) * STEP;
-      var progress = clamp((scrollY - (wrapperTopAbs + i * itemHeight - innerHeight / 2)) / itemHeight, 0, 1);
-      var scale = 1 + (target - 1) * progress;
-      cards[i].style.transform = 'scale(' + scale + ')';
+      var value = '';
+      if (!still) {
+        // card i starts shrinking when its natural (un-pinned) top reaches the
+        // middle of the screen and is done when its natural bottom gets there
+        var target = 1 - (count - i) * STEP;
+        var progress = clamp((scrollY - (wrapperTopAbs + i * itemHeight - innerHeight / 2)) / itemHeight, 0, 1);
+        var scale = 1 + (target - 1) * progress;
+        value = 'scale(' + scale + ')';
+      }
+      // most frames most cards have not changed: leave those alone
+      if (written[i] !== value) { written[i] = value; cards[i].style.transform = value; }
     }
   }
+
+  // Whether the layout is the pinned stack (CSS decides, from the screen size)
+  // only changes when the window does, so it is looked up then, not per frame.
+  var pinned = false;
+  var written = [];
+  function measureLayout() { pinned = getComputedStyle(items[0]).position === 'sticky'; }
+  measureLayout();
 
   var pending = false;
   function schedule() {
@@ -780,8 +796,8 @@
   }
 
   window.addEventListener('scroll', schedule, { passive: true });
-  window.addEventListener('resize', schedule);
-  window.addEventListener('load', schedule);      // fonts and images can move the section
+  window.addEventListener('resize', function () { measureLayout(); schedule(); });
+  window.addEventListener('load', function () { measureLayout(); schedule(); });      // fonts and images can move the section
 
   // Hover, mouse only: the card under the cursor grows a touch (CSS, .is-hot)
   // and leans a few pixels toward the cursor on a spring, so it trails the

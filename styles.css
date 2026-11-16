@@ -1437,6 +1437,9 @@ html:not(.js) .sms-btn { display: none; }
 
 @media (max-width: 700px) {
   .nav-sec { display: none; }
+  /* on the contact page itself, the only thing left in the bar would be a
+     "Contact" button pointing at this same page, so the bar keeps just the name */
+  .topnav-inner > nav:has([aria-current="page"]) { display: none; }
 }
 
 @media (max-width: 480px) {
