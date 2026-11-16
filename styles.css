@@ -2,14 +2,21 @@
    Justin Farajollah | web design for small businesses
    --------------------------------------------------------------------------
    Same bones as docbrianna.com (Playfair Display + Jost, alternating bands,
-   sticky nav, one square-cornered black button), with its own palette:
+   sticky nav, one navy button), with its own palette:
      --ink    navy, ALL text, buttons, the closing band
      --white  page background
      --stone  warm wash for alternating sections (never used for text)
    ========================================================================== */
 
 :root {
-  --white: #FFFFFF;
+  color-scheme: light;
+
+  /* the two page backgrounds. The theme curtain (script.js) reads these, so
+     the curtain and the page always agree. */
+  --page-bg-light: #FFFFFF;
+  --page-bg-dark: #0B1220;
+
+  --white: var(--page-bg-light);   /* page background (the name is historic: it is dark in dark mode) */
   --ink: #0E1A33;
   --stone: #F3F0EA;
   --tint: #E4EAF5;     /* pale navy wash, only for hover highlights */
@@ -18,9 +25,22 @@
   --rule: rgba(14, 26, 51, 0.1);
   --shadow: 0 12px 32px rgba(14, 26, 51, 0.1);
   --shadow-lift: 0 16px 40px rgba(14, 26, 51, 0.14);
+  --stack-shadow: 0 8px 32px rgba(14, 26, 51, 0.3), 0 2px 8px rgba(14, 26, 51, 0.2);   /* Recent work cards */
 
-  /* one easing curve for every UI transition (the name dock and carousel
-     slide keep their own tuned paths) */
+  /* the same colours as bare numbers, for rgba(var(--x-rgb), alpha) */
+  --ink-rgb: 14, 26, 51;
+  --page-bg-rgb: 255, 255, 255;
+  --shadow-rgb: 14, 26, 51;
+
+  /* the closing band: a dark band in both themes, with light things on it */
+  --band-bg: #0E1A33;
+  --band-fg: #FFFFFF;
+  --band-fg-hover: #F3F0EA;        /* the light button on the band, hovered */
+
+  --portrait-glow: 0.30;           /* strength of the glow behind the portrait */
+
+  /* one easing curve for every UI transition (the name dock keeps its own
+     tuned path) */
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 
   --serif: 'Playfair Display', Georgia, serif;
@@ -33,10 +53,42 @@
   --photo: min(36rem, 46vw, calc(100svh - var(--nav-h) - 1rem));
 }
 
+/* Dark theme. script.js (and a small script in each page's <head>) sets
+   data-theme on <html>: the visitor's saved choice, or else their system
+   setting. Everything on the page is drawn from the tokens, so redefining
+   them here is the whole theme. Same navy family; never pure black or white. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --white: var(--page-bg-dark);    /* page background */
+  --ink: #E8ECF4;                  /* text */
+  --stone: #111B30;                /* alternating section wash */
+  --tint: #1C2A4A;
+
+  --ink-soft: rgba(232, 236, 244, 0.74);
+  --rule: rgba(232, 236, 244, 0.14);
+  --shadow: 0 12px 32px rgba(3, 6, 14, 0.45);
+  --shadow-lift: 0 16px 40px rgba(3, 6, 14, 0.5);
+  --stack-shadow: 0 8px 32px rgba(3, 6, 14, 0.55), 0 2px 8px rgba(3, 6, 14, 0.4);
+
+  --ink-rgb: 232, 236, 244;
+  --page-bg-rgb: 11, 18, 32;
+  --shadow-rgb: 3, 6, 14;
+
+  --band-bg: #172342;              /* still a dark band, a little lighter than the page */
+  --band-fg: #E8ECF4;
+  --band-fg-hover: #CBD3E3;
+
+  --portrait-glow: 0.12;
+}
+
 * { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
 html, body { margin: 0; padding: 0; }
+/* the top bar sits above the theme curtain, so it (and the page behind it)
+   changes colour smoothly; everything else switches while hidden under the curtain */
+html, body { transition: background-color .3s ease, color .3s ease; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -79,63 +131,95 @@ img { max-width: 100%; }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ---------- BUTTONS & LINKS ---------- */
+/* ---------- BUTTONS & LINKS ----------
+   One look for the whole site, taken from the contact page's "Let's talk"
+   panel: buttons are outlined pills that fill with ink on hover (like "Book a
+   chat"), and plain links are small, spaced capitals that darken and gain a
+   hairline underline on hover (like "Copy number / Email me"). */
 
 .btn {
-  display: inline-block;
-  background: var(--ink);
-  color: var(--white);
-  padding: 0.75rem 1.5rem;
-  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 32px;
+  border: 1px solid var(--rule);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--ink);
   font-family: var(--sans);
   font-size: 1rem;
   line-height: 1.25rem;
   font-weight: 500;
-  border: 2px solid var(--ink);
+  letter-spacing: .025em;
   cursor: pointer;
-  transition:
-    background-color 160ms var(--ease),
-    border-color 160ms var(--ease),
-    color 160ms var(--ease),
-    transform 120ms var(--ease);
+  transition: border-color 500ms, background-color 500ms, color 500ms, box-shadow 500ms, transform 500ms;
 }
-
 .btn:hover,
 .btn:focus-visible {
-  background: var(--stone);
-  color: var(--ink);
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--white);
+  box-shadow: 0 0 30px rgba(var(--shadow-rgb), .1), 0 10px 40px rgba(var(--shadow-rgb), .08);
+  transform: scale(1.02);
 }
 .btn:active { transform: scale(0.98); }
 
 .btn-small {
-  padding: 0.375rem 1rem;
-  font-size: 0.9375rem;
+  padding: 8px 20px;
+  font-size: 14px;
+}
+@media (max-width: 639.98px) {
+  .btn { padding: 12px 24px; font-size: 14px; }
+  .btn-small { padding: 8px 18px; }
 }
 
-/* Inverted button for the navy closing band */
-.btn-light {
-  background: var(--white);
-  color: var(--ink);
-  border-color: var(--white);
+/* The two main calls to action on the home page are the same pill, but solid
+   in the most contrasting colour: ink on the page ("Contact me")... */
+.btn-solid {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--white);
 }
+/* ...and light on the navy closing band ("Let's talk") */
+.btn-light,
 .btn-light:hover,
 .btn-light:focus-visible {
-  background: var(--stone);
-  border-color: var(--stone);
+  border-color: var(--band-fg);
+  background: var(--band-fg);
+  color: var(--band-bg);
 }
 
-.text-link {
+/* quiet links: "Visit ...", "Back to home", the footer links, the bar's links */
+.text-link,
+.nav-link,
+.footer-nav a {
   display: inline-block;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  border-bottom: 2px solid var(--rule);
-  padding-bottom: 2px;
-  transition: border-color 160ms var(--ease);
+  padding: 4px 0;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: transparent;
+  text-underline-offset: 4px;
 }
 a:hover > .text-link,
 a:focus-visible > .text-link,
 a.text-link:hover,
-a.text-link:focus-visible { border-bottom-color: var(--ink); }
+a.text-link:focus-visible,
+.nav-link:hover,
+.nav-link:focus-visible,
+.nav-link[aria-current="page"],
+.footer-nav a:hover,
+.footer-nav a:focus-visible {
+  color: var(--ink);
+  text-decoration-color: var(--ink);
+}
+
 
 /* ---------- TOP NAV ---------- */
 
@@ -145,12 +229,13 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   z-index: 50;
   background: var(--white);
   border-bottom: 1px solid var(--rule);
+  transition: background-color .3s ease, border-color .3s ease, color .3s ease;
 }
 
 /* frosted bar: the page softly shows through as it scrolls underneath */
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .topnav {
-    background: rgba(255, 255, 255, 0.88);
+    background: rgba(var(--page-bg-rgb), 0.88);
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
   }
@@ -170,7 +255,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 .nav-brand {
   white-space: nowrap;
   font-family: var(--serif);
-  font-weight: 500;
+  font-weight: 400;
   font-size: 1.25rem;
   letter-spacing: 0.01em;
 }
@@ -184,18 +269,6 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   padding: 0;
 }
 
-.nav-link {
-  font-size: 0.9375rem;
-  font-weight: 500;
-  padding-bottom: 4px;
-  /* underline draws in from the left on hover */
-  background: linear-gradient(currentColor, currentColor) 0 100% / 0 2px no-repeat;
-  transition: background-size 300ms var(--ease);
-}
-.nav-link:hover,
-.nav-link:focus-visible,
-.nav-link[aria-current="page"] { background-size: 100% 2px; }
-
 /* ---------- SECTION SHELL ---------- */
 
 .section {
@@ -205,24 +278,27 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 }
 .section-stone { background: var(--stone); }
 .section-ink {
-  background: var(--ink);
-  color: var(--white);
+  background: var(--band-bg);
+  color: var(--band-fg);
 }
+/* on the band the usual ink focus ring would be navy on navy */
+.section-ink :focus-visible { outline-color: var(--band-fg); }
 
 .section-inner { max-width: 68rem; margin: 0 auto; }
 .section-inner-narrow { max-width: 46rem; }
 
 .section-heading {
   font-family: var(--serif);
-  font-weight: 500;
+  font-weight: 400;
   font-size: clamp(2.1rem, 3.6vw, 3.1rem);
   line-height: 1.08;
+  letter-spacing: -.025em;         /* light and slightly tight, like "Let's talk" */
   margin: 0 0 1.75rem;
   text-wrap: balance;
 }
 .section-heading-center { text-align: center; }
 /* a heading with an intro line under it sits closer to that line */
-.section-heading:has(+ .section-lede, + .contact-lede) { margin-bottom: 1rem; }
+.section-heading:has(+ .section-lede) { margin-bottom: 1rem; }
 
 .body-text {
   font-size: 1.0625rem;
@@ -262,7 +338,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 
 .hero-name {
   font-family: var(--serif);
-  font-weight: 500;
+  font-weight: 400;
   font-size: clamp(2.9rem, 6.4vw, 5.2rem);
   line-height: 1.02;
   margin: 0 0 1rem;
@@ -316,7 +392,15 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   margin: 0 auto;
 }
 
+/* A faint glow behind the portrait, in the shape of the portrait: a soft
+   shadow cast by the cutout itself (drop-shadow follows its outline), in the
+   theme's text colour: navy in light, pale in dark. The clip keeps the blur from spilling below the photo's
+   flat bottom edge onto the next band. */
+.photo-pin { clip-path: inset(-80px -80px 0 -80px); }
+.photo-pin img { filter: drop-shadow(0 0 28px rgba(var(--ink-rgb), var(--portrait-glow))); }
+
 .photo-pin img {
+  position: relative;                /* above the glow */
   display: block;
   width: 100%;
   height: 100%;
@@ -341,27 +425,53 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 }
 
 .service-card {
-  background: var(--white);
+  /* cursor glow (ported from a 21st.dev "hover glow button"; numbers are the original's) */
+  --glow-size: 200px;      /* original: 200px */
+  --glow-scale: 1.2;       /* original: 1.2 */
+  --glow-ms: 400ms;        /* original: 400ms */
+  --glow-opacity: 1;       /* original: .5, raised: the pale tint barely shows on the stone card below 1 */
+
+  position: relative;
+  overflow: hidden;        /* the rounded corners clip the glow */
+  background: var(--stone);
   border-radius: 14px;
   padding: 2rem;
-  border-top: 2px solid var(--ink);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
 }
-/* same hover as the cards on docbrianna.com: lifts a little, casts a soft
-   shadow and fills with a tint. Mouse only, so a tap on a phone doesn't leave
-   a card stuck highlighted. */
-@media (hover: hover) {
-  .service-card:hover {
-    box-shadow: var(--shadow);
-    background: var(--tint);
+/* the text sits above the glow */
+.service-card > * { position: relative; z-index: 1; }
+
+/* The cards are not links, so they stay put on hover: no lift, no shadow. The
+   only response is the glow, a soft round light under the cursor. script.js
+   writes where the cursor is into --gx / --gy (px from the card's corner).
+   Only the scale is animated; the position never is, so the light tracks the
+   cursor exactly. */
+@media (hover: hover) and (pointer: fine) {
+  .service-card::before {
+    content: "";
+    position: absolute;
+    left: var(--gx, 50%);
+    top: var(--gy, 50%);
+    width: var(--glow-size);
+    height: var(--glow-size);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    background: radial-gradient(circle, var(--tint) 10%, transparent 70%);
+    opacity: var(--glow-opacity);
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform var(--glow-ms) ease-out;
   }
+  /* .is-glowing is the hover state, set by script.js for a mouse or pen only,
+     so a tap on a touch-screen laptop never leaves a glow behind */
+  .service-card.is-glowing::before { transform: translate(-50%, -50%) scale(var(--glow-scale)); }
 }
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .service-card:hover { transform: translateY(-4px); }
+/* reduced motion: the glow appears and disappears instantly */
+@media (prefers-reduced-motion: reduce) {
+  .service-card::before { transition: none; }
 }
 .service-card h3 {
   font-family: var(--serif);
-  font-weight: 500;
+  font-weight: 400;
   font-size: 1.5rem;
   margin: 0 0 0.5rem;
 }
@@ -409,11 +519,11 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   background: var(--white);
   font-family: var(--serif);
   font-size: 1.25rem;
-  font-weight: 500;
+  font-weight: 400;
 }
 .step h3 {
   font-family: var(--serif);
-  font-weight: 500;
+  font-weight: 400;
   font-size: 1.5rem;
   margin: 0 0 0.5rem;
 }
@@ -425,67 +535,273 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 }
 .steps-cta { text-align: center; margin: 3rem 0 0; }
 
-/* ---------- PORTFOLIO ---------- */
+/* ---------- RECENT WORK: stacking cards ----------
+   Ported from a 21st.dev React + GSAP component (its behaviour and numbers,
+   not its code). Each project is one card, and the card is the link itself.
+   Without JS, and on screens too short to hold a card, the cards are a plain
+   list. With JS (html.js) every .stack-item is a full-height box pinned under
+   the nav, so the next card slides up over the last one, and script.js
+   shrinks the earlier cards: it writes transform: scale() on each card, sets
+   --i (the card's index) and overwrites the sizes below from its constants.
+   A card is as tall as its content: the screenshot is always shown whole, at
+   its own proportions (the original's fixed 450px height cut the bottom off).
+   Sticky silently stops working if any ancestor gets overflow hidden, auto or
+   scroll. overflow-x: clip on #work is safe: clip makes no scroll container. */
 
-.work-card {
+.stack {
+  --stack-w: 70%;          /* card width (original: 70%) */
+  --stack-foot: 5.75rem;   /* height kept free for the card's footer bar when a card is fitted to a short screen */
+  --stack-radius: 24px;    /* corner radius (original: 24px) */
+  --stack-border: 3px;     /* ring thickness (original: 3px) */
+  --stack-offset: 25px;    /* each card sits this much lower than the one before (original: 25px) */
+  --stack-shift: -5svh;    /* the pile sits a little above the middle (original: -5) */
+
+  display: grid;
+  gap: 2.5rem;
+  max-width: 46rem;
+  margin: 0 auto;
+}
+
+.js #work { overflow-x: clip; }        /* nothing in the stack may cause sideways scroll */
+
+.stack-card {
+  display: block;
+  position: relative;
+  border-radius: var(--stack-radius);
+  isolation: isolate;                  /* keeps the ring (z-index -1) behind the face, not behind the page */
+}
+.stack-card:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* electric border: script.js adds this element when ELECTRIC_BORDER is on. It
+   is a full disc of colour behind the card; the opaque face covers all but
+   the outer 3px, which is what makes it a ring. */
+.stack-ring {
+  position: absolute;
+  inset: calc(-1 * var(--stack-border));
+  border-radius: calc(var(--stack-radius) + var(--stack-border));
+  z-index: -1;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(var(--ink-rgb), 0.8) 60deg,
+    rgba(var(--ink-rgb), 0.6) 120deg,
+    transparent 180deg,
+    rgba(var(--ink-rgb), 0.4) 240deg,
+    transparent 360deg
+  );
+}
+
+.stack-face {
+  position: relative;
+  width: 100%;
+  border-radius: var(--stack-radius);
+  overflow: hidden;
+  background: var(--white);
+  border: 1px solid var(--rule);
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  box-shadow: var(--stack-shadow);
 }
 
-.work-card h3 {
-  font-family: var(--serif);
-  font-weight: 500;
-  font-size: 1.5rem;
-  margin: 1rem 0 0;
-}
-
-.work-card p {
-  margin: 0 0 1rem;
-  line-height: 1.6;
-  color: var(--ink-soft);
-}
-
-.work-card .text-link { align-self: center; }
-
-.browser {
-  background: var(--white);
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: var(--shadow);
-  transition: box-shadow 180ms var(--ease);
-}
-.work-card:hover .browser,
-.work-card:focus-visible .browser { box-shadow: var(--shadow-lift); }
-
-.browser-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--rule);
-}
-.browser-bar span {
-  width: 0.625rem;
-  height: 0.625rem;
-  border-radius: 50%;
-  background: var(--rule);
-}
-.browser-bar em {
-  font-style: normal;
-  font-size: 0.75rem;
-  letter-spacing: 0.01em;
-  color: var(--ink-soft);
-  margin-left: 0.5rem;
-}
-
-.browser img {
+.stack-shot { aspect-ratio: 1600 / 761; }
+.stack-shot img {
   display: block;
   width: 100%;
-  height: auto;
-  aspect-ratio: 1600 / 763;
+  height: 100%;
   object-fit: cover;
   object-position: top;
+}
+
+.stack-foot {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px 24px;
+  padding: 16px 24px;
+}
+.stack-text { min-width: 0; }
+.stack-text h3 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(20px, 2.4vw, 28px);
+  line-height: 1.2;
+  color: var(--ink);
+  margin: 0;
+}
+.stack-text p {
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 2px 0 0;
+}
+.stack-foot .text-link { flex: none; white-space: nowrap; }
+/* the whole card is the link, so its "Visit" line reacts to the card */
+.stack-card:hover .text-link,
+.stack-card:focus-visible .text-link { color: var(--ink); text-decoration-color: var(--ink); }
+
+/* hover (mouse only): the card grows a touch, so it reads as clickable;
+   script.js also leans it toward the cursor on a spring */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .js .stack-card { transition: scale 400ms var(--ease); }
+  .js .stack-card.is-hot { scale: 1.02; }
+}
+
+/* JS on and a screen tall enough to hold a card: the sticky stack. Anything
+   shorter (a phone on its side) keeps the plain list above. */
+@media (min-height: 481px) and (min-width: 700px), (min-height: 601px) {
+  /* the stack runs the full width of the screen, so the section gives up its
+     side padding and the heading keeps a gutter of its own */
+  .js #work { padding-left: 0; padding-right: 0; }
+  .js #work .section-inner { padding: 0 1.5rem; }
+
+  .js .stack {
+    display: block;
+    max-width: none;
+    margin: 0;
+  }
+  .js .stack-item {
+    position: sticky;
+    top: var(--nav-h);
+    height: calc(100vh - var(--nav-h));
+    height: calc(100svh - var(--nav-h));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;              /* a pinned item is a see-through sheet over the cards beneath it... */
+  }
+  /* A card's height follows from its width (screenshot at 1600:761, plus the
+     footer bar). So the width is whichever is smallest: the share of the
+     screen it is allowed, or the width at which the whole card, with room for
+     the pile's offsets (100px), still fits the screen's height. On an
+     ordinary screen the first wins; in a short window the card gets narrower
+     instead of being cut off. */
+  .js .stack-card {
+    pointer-events: auto;              /* ...so only the cards themselves take clicks */
+    width: 88%;                        /* phones (and browsers without svh) */
+    width: min(88%, calc((100svh - var(--nav-h) - 100px - var(--stack-foot)) * 1600 / 761));
+    top: calc(var(--stack-shift) + var(--i, 0) * var(--stack-offset));
+    transform-origin: center top;
+    will-change: transform;
+  }
+}
+
+/* 700px and up: the original's 70% width, up to 1100px */
+@media (min-height: 481px) and (min-width: 700px) {
+  .js .stack-card {
+    width: var(--stack-w);
+    width: min(var(--stack-w), 1100px, calc((100svh - var(--nav-h) - 100px - var(--stack-foot)) * 1600 / 761));
+    max-width: 1100px;
+  }
+}
+
+/* phones: the footer bar stacks (link under the text), so it is taller */
+@media (max-width: 699.98px) {
+  .stack { --stack-foot: 8.5rem; }
+  .stack-foot { flex-direction: column; align-items: flex-start; }
+}
+
+/* ---------- FAQ ("Common questions") ----------
+   Ported from a 21st.dev React + motion accordion (its behaviour and numbers,
+   not its code). In the HTML each question is a plain heading with its answer
+   under it, and that is what shows without JS. script.js adds .is-ready to
+   the list, turns each heading's text into a button with a chevron, and wraps
+   each answer in a panel that opens and closes (.is-open on the item).
+   The height animates with CSS alone: the panel is a one-row grid whose row
+   goes from 0fr to 1fr, so nothing is measured and text can reflow freely. */
+
+.faq-list {
+  max-width: 46rem;
+  margin: 0 auto;
+  border: 1px solid var(--rule);
+  border-radius: 14px;               /* the original was 11px; 14px matches the site's cards */
+  background: var(--white);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.faq-item + .faq-item { border-top: 1px solid var(--rule); }
+
+.faq-title {
+  margin: 0;
+  padding: 1rem 1.25rem;             /* without JS; with JS the button carries the padding */
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 1.2rem;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.faq-list.is-ready .faq-title { padding: 0; }
+
+.faq-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: var(--ink-soft);            /* closed; the open one is full ink */
+  cursor: pointer;
+  transition: background-color 150ms, color 150ms;
+}
+.faq-item.is-open .faq-btn { color: var(--ink); }
+.faq-q { flex: 1; min-width: 0; }
+.faq-chevron {
+  flex-shrink: 0;
+  width: 16px;                       /* the original was 13px, sized for 13px text */
+  height: 16px;
+  color: var(--ink-soft);
+  transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.faq-item.is-open .faq-chevron { transform: rotate(180deg); }
+@media (hover: hover) {
+  .faq-btn:hover { background: var(--tint); }
+}
+.faq-btn:focus-visible {
+  outline: none;
+  background: var(--tint);
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+/* the panel: a grid row that grows from nothing to the height of its content */
+.faq-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 300ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.faq-item.is-open .faq-panel { grid-template-rows: 1fr; }
+.faq-clip { min-height: 0; overflow: hidden; }
+
+/* the answer. Its top rule and stone fill travel with it, so a closed item
+   shows neither. */
+.faq-body {
+  padding: 0.75rem 1.25rem 1.25rem;
+  border-top: 1px solid var(--rule);
+  background: var(--stone);
+  font-family: var(--sans);
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+.faq-body p { margin: 0; }
+.faq-body p + p { margin-top: 0.75rem; }
+.faq-body p + p .text-link { margin-top: -4px; }
+
+/* fade: a transition uses the timing of the state it is going TO, so the
+   closing timing lives in the closed rule and the opening timing in the open one */
+.faq-list.is-ready .faq-body {
+  opacity: 0;
+  transition: opacity 140ms cubic-bezier(0.4, 0, 1, 1);
+}
+.faq-list.is-ready .faq-item.is-open .faq-body {
+  opacity: 1;
+  transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 /* ---------- CLOSING CTA ---------- */
@@ -497,89 +813,476 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 
 .cta-heading {
   font-family: var(--serif);
-  font-weight: 500;
-  font-size: clamp(2rem, 3.6vw, 3rem);
-  line-height: 1.12;
+  font-weight: 400;
+  font-size: clamp(2.1rem, 3.6vw, 3.1rem);   /* same size and leading as .section-heading */
+  line-height: 1.08;
+  letter-spacing: -.025em;
   margin: 0 0 2rem;
   text-wrap: balance;
 }
 
-/* ---------- CONTACT PAGE ---------- */
+/* ---------- CONTACT PAGE: "Let's work together" ----------
+   Ported from a 21st.dev React component (its behaviour and numbers, not its
+   code). A big headline with a round arrow button under it; clicking either
+   fades that view out and brings in the "Let's talk" panel with the ways to
+   reach me. script.js adds two classes to the section, .is-clicked straight
+   away and .is-success half a second later, and every state below hangs off
+   those two. Without JS (no html.js) nothing is hidden: the headline, the
+   paragraph and the panel are simply stacked.
+   Colours: the original's theme maps to --ink (text), --white (background),
+   --ink-soft (quiet text) and --rule (borders). The thin lines are --ink at
+   20%, because --rule on its own is too faint for a 1px line. */
 
-.contact-lede {
+.section.lw {
+  --lw-ease: cubic-bezier(.16, 1, .3, 1);   /* original: cubic-bezier(0.16, 1, 0.3, 1); script.js sets it from EASE */
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - var(--nav-h));
+  min-height: calc(100svh - var(--nav-h));
+  padding: 2.5rem 1.5rem;
+}
+
+.lw-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 48px;
+}
+
+/* "Now accepting new projects": a quiet line under the headline group */
+.lw-avail {
+  margin: 0;
   text-align: center;
+  transition: opacity 500ms, transform 500ms, visibility 500ms;
+}
+.lw-avail + .lw-bottom { margin-top: -16px; }
+.lw-avail-text {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* 2. The headline group: the thing you hover and click. Its hover look is
+   written once, as variables: resting values here, hover values further down. */
+.lw-head {
+  --lw-lift: 0%;                    /* how far each line of the headline rises */
+  --lw-ring-line: var(--rule);
+  --lw-ring-fill: transparent;
+  --lw-ring-scale: 1;
+  --lw-arrow-move: 0px;             /* the arrow moves this far right and up */
+  --lw-arrow-ink: var(--ink);
+  --lw-side-scale: 1;
+  --lw-side-opacity: .2;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+.js .lw-head { cursor: pointer; }
+
+.lw-title {
+  margin: 0;
+  text-align: center;
+  font-family: var(--serif);
+  font-weight: 400;                 /* the original's 300 is not loaded */
+  font-size: 3rem;
+  line-height: 1.05;
+  letter-spacing: -.025em;
+  color: var(--ink);
+  transition: opacity 700ms var(--lw-ease), transform 700ms var(--lw-ease);
+}
+/* each line is a window its text can slide inside; the bottom padding keeps
+   Playfair's descenders (the g in "together") from being cut off */
+.lw-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: .12em;
+}
+.lw-line > span {
+  display: block;
+  transform: translateY(var(--lw-lift));
+  transition: transform 700ms var(--lw-ease);
+}
+.lw-line + .lw-line > span { transition-delay: 75ms; }
+.lw-muted { opacity: .6; }
+
+/* the round button: a ring with an arrow on top */
+.lw-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin: 16px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+.lw-trigger:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+.lw-ring {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--lw-ring-line);
+  border-radius: 50%;
+  background: var(--lw-ring-fill);
+  transform: scale(var(--lw-ring-scale));
+  pointer-events: none;
+  transition: border-color 500ms ease-out, background-color 500ms ease-out, transform 500ms ease-out, opacity 500ms ease-out;
+}
+.lw-arrow {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  color: var(--lw-arrow-ink);
+  transform: translate(var(--lw-arrow-move), calc(-1 * var(--lw-arrow-move)));
+  transition: transform 500ms var(--lw-ease), color 500ms var(--lw-ease), opacity 500ms var(--lw-ease);
+}
+
+/* the two short lines either side of the group */
+.lw-side {
+  position: absolute;
+  top: 50%;
+  width: 32px;
+  height: 1px;
+  background: var(--ink);
+  opacity: var(--lw-side-opacity);
+  transform: translate(var(--lw-side-x, 0px), -50%) scaleX(var(--lw-side-scale));
+  transition: transform 500ms, opacity 500ms;
+}
+.lw-side-left { left: -32px; }
+.lw-side-right { right: -32px; }
+
+/* 3. The paragraph under it */
+.lw-bottom {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  transition: opacity 500ms 100ms, transform 500ms 100ms, visibility 500ms 100ms;
+}
+/* same size and leading as the intro lines on the home page (.section-lede);
+   the original's 14px read as small print next to them */
+.lw-bottom p {
+  margin: 0;
+  max-width: 28rem;
   font-size: 1.1rem;
   line-height: 1.6;
   color: var(--ink-soft);
-  margin: 0 auto 3rem;
-  max-width: 34rem;
 }
 
-.contact-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.5rem;
-  align-items: stretch;
-}
-
-.contact-card {
-  background: var(--stone);
-  border-radius: 14px;
-  padding: 2rem;
+/* 4. The "Let's talk" panel */
+.lw-panel {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 1rem;
-  /* fades up once on load, the cards a beat apart */
-  animation: fadeInUp 500ms var(--ease) backwards;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
 }
-
-.contact-card:nth-child(2) { animation-delay: 60ms; }
-.contact-card:nth-child(3) { animation-delay: 120ms; }
-
-.contact-lede { animation: fadeInUp 500ms var(--ease) backwards; }
-
-.contact-card h2 {
-  font-family: var(--serif);
+.lw-panel-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.lw-label {
+  font-size: 12px;
   font-weight: 500;
-  font-size: 1.75rem;
-  margin: 0;
-}
-
-.contact-card p {
-  margin: 0;
-  line-height: 1.65;
+  letter-spacing: .3em;
+  text-transform: uppercase;
   color: var(--ink-soft);
 }
-
-.contact-card .btn { margin-top: auto; }
-
-/* the phone number and email address: lining figures so the digits sit on
-   the line (Playfair's default figures dip below it) */
-.contact-card .contact-detail {
+.lw-talk {
+  margin: 0;
   font-family: var(--serif);
-  font-size: 1.25rem;
-  font-weight: 500;
-  line-height: 1.3;
+  font-weight: 400;
+  font-size: 1.875rem;
+  letter-spacing: -.025em;
   color: var(--ink);
-  font-variant-numeric: lining-nums tabular-nums;
-  overflow-wrap: anywhere;
+}
+/* focus is moved to this heading when the panel appears, so keyboard and
+   screen reader users land in the right place. It is not a control, so it
+   shows no focus ring. */
+.lw-talk:focus { outline: none; }
+
+/* read out by screen readers, never seen (the "Copied" announcement) */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-/* Phones get the sms: button; desktops (where sms: does nothing useful)
-   get a copy-number button instead. */
+/* "Book a call": a pill between two short lines. Hover look as variables again. */
+.lw-book {
+  --bk-scale: 1;
+  --bk-line-scale: 1;
+  --bk-line-opacity: .2;
+  --bk-border: var(--rule);
+  --bk-fill: transparent;
+  --bk-ink: var(--ink);
+  --bk-shadow: none;
+  --bk-arrow: translate(0, 0) scale(1);
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.lw-book-line {
+  width: 32px;
+  height: 1px;
+  background: var(--ink);
+  opacity: var(--bk-line-opacity);
+  transform: scaleX(var(--bk-line-scale));
+  transition: transform 500ms, opacity 500ms;
+}
+.lw-pill {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  border: 1px solid var(--bk-border);
+  border-radius: 9999px;
+  overflow: hidden;
+  background: var(--bk-fill);
+  color: var(--bk-ink);
+  box-shadow: var(--bk-shadow);
+  transition: border-color 500ms, background-color 500ms, color 500ms, box-shadow 500ms;
+}
+.lw-pill svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  transition: transform 500ms;
+}
+.lw-pill-arrow { transform: var(--bk-arrow); }
+.lw-pill-text {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: .025em;
+}
+
+/* the quiet links under the pill. The padding makes each one a finger-sized
+   target; the matching negative margin keeps the row looking 12px tall. */
+.lw-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 24px;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.lw-link {
+  margin: -13px 0;
+  padding: 13px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: transparent;
+  text-underline-offset: 4px;
+}
+.lw-link:hover {
+  color: var(--ink);
+  text-decoration-color: var(--ink);
+}
+
+/* Phones get "Text me"; desktops (where sms: does nothing useful) get the
+   copy buttons instead. */
 .sms-btn { display: none; }
 @media (hover: none) and (pointer: coarse) {
   .sms-btn { display: inline-block; }
   .copy-btn { display: none !important; }
 }
 
+/* Without JS there is nothing to reveal and nothing to build a number from,
+   so the controls that would do nothing are left out. */
+html:not(.js) .lw-trigger,
+html:not(.js) .lw-side,
+html:not(.js) .sms-btn { display: none; }
+
+@media (min-width: 640px) {
+  .lw-title { font-size: 3.75rem; }
+  .lw-trigger { width: 80px; height: 80px; }
+  .lw-arrow { width: 28px; height: 28px; }
+  .lw-side { width: 48px; }
+  .lw-side-left { left: -64px; }
+  .lw-side-right { right: -64px; }
+  .lw-talk { font-size: 2.25rem; }
+  .lw-book-line { width: 48px; }
+  .lw-pill { padding: 16px 32px; }
+  .lw-pill svg { width: 20px; height: 20px; }
+  .lw-pill-text { font-size: 16px; }
+}
+@media (min-width: 768px) {
+  .lw-title { font-size: 4.5rem; }
+}
+@media (min-width: 1024px) {
+  .lw-title { font-size: 6rem; }
+}
+
+/* ---- HOVER on the headline group (mouse only), and the same look while the
+   round button has keyboard focus ---- */
+@media (hover: hover) and (pointer: fine) {
+  .js .lw-head:hover {
+    --lw-lift: -8%;
+    --lw-ring-line: var(--ink);
+    --lw-ring-fill: var(--ink);
+    --lw-ring-scale: 1.1;
+    --lw-arrow-move: 2px;
+    --lw-arrow-ink: var(--white);
+    --lw-side-scale: 1.5;
+    --lw-side-opacity: .5;
+  }
+}
+.js .lw-head:has(.lw-trigger:focus-visible) {
+  --lw-lift: -8%;
+  --lw-ring-line: var(--ink);
+  --lw-ring-fill: var(--ink);
+  --lw-ring-scale: 1.1;
+  --lw-arrow-move: 2px;
+  --lw-arrow-ink: var(--white);
+  --lw-side-scale: 1.5;
+  --lw-side-opacity: .5;
+}
+
+/* ---- CLICKED: the first view leaves ---- */
+.lw.is-clicked .lw-avail {
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  visibility: hidden;
+}
+.lw.is-clicked .lw-head {
+  pointer-events: none;
+  visibility: hidden;                      /* once its parts have finished leaving */
+  transition: visibility 0s linear 700ms;
+}
+.lw.is-clicked .lw-title {
+  opacity: 0;
+  transform: translateY(-40px) scale(.95);
+}
+.lw.is-clicked .lw-line > span { transform: none; }      /* the hover lift is off */
+.lw.is-clicked .lw-ring {
+  border-color: var(--ink);
+  background: transparent;
+  transform: scale(3);
+  opacity: 0;
+  transition-duration: 700ms;
+}
+.lw.is-clicked .lw-arrow {
+  color: var(--ink);
+  transform: translate(100px, -100px) scale(.5);
+  opacity: 0;
+  transition-duration: 600ms;
+}
+.lw.is-clicked .lw-side {
+  --lw-side-scale: 0;
+  opacity: 0;
+}
+.lw.is-clicked .lw-side-left { --lw-side-x: -20px; }
+.lw.is-clicked .lw-side-right { --lw-side-x: 20px; }
+.lw.is-clicked .lw-bottom {
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* ---- The panel: hidden until SUCCESS (only when JS is there to reveal it) ---- */
+.js .lw-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  opacity: 0;
+  transform: translateY(20px) scale(.95);
+  pointer-events: none;
+  visibility: hidden;
+  /* visibility is not in this list on purpose: it must flip the instant the
+     panel is revealed, or focus could not be moved into it */
+  transition: opacity 700ms var(--lw-ease), transform 700ms var(--lw-ease);
+}
+.js .lw-label,
+.js .lw-talk,
+.js .lw-links {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 500ms, transform 500ms;
+}
+.js .lw-label { transition-delay: 100ms; }
+.js .lw-talk { transition-delay: 200ms; }
+.js .lw-links { transition-delay: 450ms; }
+.js .lw-book {
+  opacity: 0;
+  transform: translateY(15px) scale(1);
+  transition: opacity 500ms 150ms, transform 500ms 150ms;
+}
+
+.lw.is-success .lw-panel {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  visibility: visible;
+}
+.lw.is-success .lw-label,
+.lw.is-success .lw-talk,
+.lw.is-success .lw-links {
+  opacity: 1;
+  transform: translateY(0);
+}
+.lw.is-success .lw-book {
+  opacity: 1;
+  transform: translateY(0) scale(var(--bk-scale));
+}
+
+/* "Book a call" hover and keyboard focus */
+.js .lw-book:hover,
+.js .lw-book:focus-visible {
+  --bk-scale: 1.02;
+  --bk-line-scale: 0;
+  --bk-line-opacity: 0;
+  --bk-border: var(--ink);
+  --bk-fill: var(--ink);
+  --bk-ink: var(--white);
+  --bk-shadow: 0 0 30px rgba(var(--shadow-rgb), .1), 0 10px 40px rgba(var(--shadow-rgb), .08);
+  --bk-arrow: translate(3px, -3px) scale(1.1);
+}
+
 .back-link { text-align: center; margin: 3rem 0 0; }
 
 /* ---------- 404 PAGE ----------
    Fills the screen under the nav: a large serif 404 with the hero's short
-   rule, then three stone cards to useful places (same hover as "What I do").
-   Everything fades up once, a beat apart, like the contact cards. */
+   rule, then three stone cards to useful places (the same card as "What I
+   do", but these are links, so they tint on hover). Everything fades up once,
+   a beat apart. */
 
 .nf {
   min-height: calc(100svh - var(--nav-h));
@@ -590,7 +1293,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 
 .nf-code {
   font-family: var(--serif);
-  font-weight: 500;
+  font-weight: 400;
   font-size: clamp(5.5rem, 15vw, 10rem);
   line-height: 0.9;
   letter-spacing: 0.02em;
@@ -615,24 +1318,22 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   gap: 0.5rem;
   background: var(--stone);
   border-radius: 14px;
-  border-top: 2px solid var(--ink);
   padding: 1.75rem;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+  transition: box-shadow 0.25s ease, background-color 0.25s ease;
 }
 .nf-card h2 {
   font-family: var(--serif);
-  font-weight: 500;
-  font-size: 1.4rem;
+  font-weight: 400;
+  font-size: 1.5rem;                 /* card titles are the same size site-wide */
   margin: 0;
 }
-.nf-card p { margin: 0; line-height: 1.6; color: var(--ink-soft); text-wrap: pretty; }
+.nf-card p { margin: 0; line-height: 1.65; color: var(--ink-soft); text-wrap: pretty; }
 .nf-card .text-link { margin-top: auto; padding-top: 0.5rem; align-self: flex-start; }
 
+/* these cards are links, so they do answer the mouse: a tint and a soft shadow
+   (no lift, like the "What I do" cards) */
 @media (hover: hover) {
   .nf-card:hover { box-shadow: var(--shadow); background: var(--tint); }
-}
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .nf-card:hover { transform: translateY(-4px); }
 }
 
 .nf .section-inner > *,
@@ -659,7 +1360,8 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   color: var(--ink-soft);
 }
 .footer p { margin: 0; }
-.footer-email { margin-top: 0.75rem; color: var(--ink); }
+/* "Email me" and "LinkedIn", side by side under the name */
+.footer .footer-links { display: flex; flex-wrap: wrap; gap: 0 1.5rem; margin-top: 0.5rem; }
 
 .footer-inner {
   max-width: 68rem;
@@ -672,7 +1374,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 .footer-name {
   display: inline-block;
   font-family: var(--serif);
-  font-weight: 500;
+  font-weight: 400;
   font-size: 1.25rem;
   color: var(--ink);
   margin-bottom: 0.25rem;
@@ -684,16 +1386,6 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   display: flex;
   gap: 1.75rem;
 }
-.footer-nav a {
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--ink);
-  padding-bottom: 4px;
-  background: linear-gradient(currentColor, currentColor) 0 100% / 0 2px no-repeat;
-  transition: background-size 300ms var(--ease);
-}
-.footer-nav a:hover,
-.footer-nav a:focus-visible { background-size: 100% 2px; }
 .footer-copy {
   max-width: 68rem;
   margin: 2.5rem auto 0 !important;
@@ -723,7 +1415,8 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   .story-photo { order: 2; }
   .about { order: 3; padding: 3rem 0 4rem; }
   .photo-pin {
-    position: static;
+    position: relative;              /* not pinned; relative only so the glow has something to sit in */
+    top: auto;
     width: var(--mphoto);
     height: auto;
     aspect-ratio: 1 / 1;
@@ -742,21 +1435,66 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   .footer-nav ul { flex-wrap: wrap; gap: 0.75rem 1.5rem; }
 }
 
-/* three contact cards need the full width; below that they stack */
-@media (max-width: 1080px) {
-  .contact-grid {
-    grid-template-columns: minmax(0, 1fr);
-    max-width: 36rem;
-    margin: 0 auto;
-  }
-}
-
 @media (max-width: 700px) {
   .nav-sec { display: none; }
 }
 
 @media (max-width: 480px) {
   .nav-brand { font-size: 1.1rem; }
+}
+
+/* ---------- SIDE INDEX (desktop navigation) ----------
+   On wide screens the links leave the top bar, which keeps only the name, and
+   a small right-aligned index is fixed at the top right instead. The current
+   section is darker and a touch bolder, the rest are dimmed (script.js marks
+   it with aria-current, using the same observer as the vertical label, and
+   adds .on-ink while the index is over the navy band). Below the breakpoint
+   this is hidden and the bar's own links are used, so exactly one "Main"
+   navigation exists at any width. */
+
+.side-nav { display: none; }
+
+@media (min-width: 1380px) {
+  /* the bar's whole <nav> goes, not just its list, so no empty landmark is left */
+  .topnav-inner > nav { display: none; }
+
+  .side-nav {
+    display: block;
+    position: fixed;
+    top: calc(var(--nav-h) + 1.5rem);
+    right: 2.5vw;
+    z-index: 45;                 /* under the top bar (50) */
+    pointer-events: none;        /* only the links themselves take clicks */
+  }
+  .side-nav ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    text-align: right;
+  }
+  .side-link {
+    pointer-events: auto;
+    font-family: var(--sans);
+    font-size: 0.9rem;           /* the original 0.7rem read as too small */
+    line-height: 1.75;
+    letter-spacing: .01em;
+    color: var(--ink);
+    opacity: .62;
+    transition: opacity 150ms cubic-bezier(.4, 0, .2, 1), color 150ms cubic-bezier(.4, 0, .2, 1);
+  }
+  .side-link:hover { opacity: 1; }
+  .side-link[aria-current] {
+    opacity: 1;
+    font-weight: 500;
+  }
+  .side-link:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+  }
+
+  /* over the navy closing band: same opacities, white instead of ink */
+  .side-nav.on-ink .side-link { color: var(--band-fg); }
+  .side-nav.on-ink .side-link:focus-visible { outline-color: var(--band-fg); }
 }
 
 /* ---------- VERTICAL SECTION LABEL ----------
@@ -796,7 +1534,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 }
 
 .vertical-label-ink .vertical-label-text { color: var(--ink-soft); }
-.vertical-label-white .vertical-label-text { color: var(--white); }
+.vertical-label-white .vertical-label-text { color: var(--band-fg); }
 
 /* until the first measurement lands, show only the ink copy */
 .vertical-label-white { clip-path: inset(50% 0 50% 0); }
@@ -807,8 +1545,8 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 
 /* ---------- HOME ONLY: hero name docks into the nav on scroll ----------
    Experimental. To revert: drop the branch, or delete this block, the
-   .name-float div and the id/spans on the h1 in index.html, and the last IIFE
-   in script.js. */
+   .name-float div and the id/spans on the h1 in index.html, and the "hero
+   name ... docks into the top bar" block in script.js. */
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -823,6 +1561,10 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
    brand stays in the layout, invisible, as the target the big name docks to */
 .home .nav-brand { visibility: hidden; }
 .home .topnav { border-bottom: 0; }
+/* ...but only while the animation is there to bring the big name up to it.
+   With JS off or reduced motion nothing ever docks, so the bar keeps its
+   ordinary small name (otherwise the bar would sit empty). */
+html:not(.anim) .home .nav-brand { visibility: visible; }
 
 .name-float {
   position: fixed;
@@ -840,7 +1582,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   top: 0;
   white-space: nowrap;
   font-family: var(--serif);
-  font-weight: 500;
+  font-weight: 400;
   line-height: normal;
   color: var(--ink);
   transform-origin: 0 0;
@@ -860,180 +1602,6 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 .name-docked .home .nav-brand { visibility: visible; }
 
 
-/* ---------- RECENT WORK: floating carousel ----------
-   One project in the foreground with its neighbours behind it on either
-   side. script.js gives every card data-pos: 0 is the foreground, -1 / 1 sit
-   beside it, and -2 / 2 are parked off the edge of the screen (only the
-   nearest neighbour on a side is ever shown). Each card has two layers: the
-   outer .work-card moves between positions, and the inner .float drifts on
-   its own very slow loop, so drifting never fights the sliding.
-   Without JS (no .js class) the cards are just a grid of links. */
-
-.car-stage {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-  gap: 2.5rem;
-}
-
-.float {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-  text-align: center;
-  width: 100%;
-}
-
-.car-controls,
-.car-status { display: none; }
-
-.js #work { overflow-x: clip; }        /* parked cards must not cause sideways scroll */
-
-.js .car-stage {
-  grid-template-columns: minmax(0, 1fr);
-  justify-items: center;
-  align-items: center;
-  gap: 0;
-  padding: 2.25rem 0 1.25rem;
-}
-
-.js .work-card {
-  grid-area: 1 / 1;
-  width: var(--cw);
-  transition:
-    transform 1s cubic-bezier(0.22, 0.8, 0.3, 1),
-    opacity 1s ease,
-    filter 1s ease,
-    visibility 0s linear 0s;
-}
-
-/* foreground */
-.js .work-card[data-pos="0"] {
-  transform: translateX(0) scale(1);
-  z-index: 3;
-}
-
-/* the two neighbours: smaller, a little dimmer, tucked behind the foreground */
-.js .work-card[data-pos="-1"],
-.js .work-card[data-pos="1"] {
-  z-index: 2;
-  opacity: 0.72;
-  filter: saturate(0.85);
-}
-.js .work-card[data-pos="-1"] { transform: translateX(-74%) scale(0.8); }
-.js .work-card[data-pos="1"]  { transform: translateX(74%) scale(0.8); }
-
-/* parked: slid fully off the side of the screen, unreachable until needed */
-.js .work-card[data-pos="-2"],
-.js .work-card[data-pos="2"] {
-  z-index: 1;
-  opacity: 0.4;
-  visibility: hidden;
-  pointer-events: none;
-  transition:
-    transform 1s cubic-bezier(0.22, 0.8, 0.3, 1),
-    opacity 1s ease,
-    filter 1s ease,
-    visibility 0s linear 1s;
-}
-.js .work-card[data-pos="-2"] { transform: translateX(-100vw) scale(0.7); }
-.js .work-card[data-pos="2"]  { transform: translateX(100vw) scale(0.7); }
-
-/* Floating in water: tiny, slow, lopsided loops. Each card gets its own
-   path, length and starting point so they never move in step. */
-@keyframes float-a {
-  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
-  25%      { transform: translate3d(3px, -9px, 0) rotate(0.45deg); }
-  50%      { transform: translate3d(-2px, -3px, 0) rotate(-0.35deg); }
-  75%      { transform: translate3d(-4px, -11px, 0) rotate(0.3deg); }
-}
-@keyframes float-b {
-  0%, 100% { transform: translate3d(0, -4px, 0) rotate(0.3deg); }
-  30%      { transform: translate3d(-4px, -12px, 0) rotate(-0.4deg); }
-  60%      { transform: translate3d(3px, -2px, 0) rotate(0.4deg); }
-  80%      { transform: translate3d(2px, -8px, 0) rotate(-0.2deg); }
-}
-@keyframes float-c {
-  0%, 100% { transform: translate3d(0, -7px, 0) rotate(-0.35deg); }
-  35%      { transform: translate3d(4px, -1px, 0) rotate(0.3deg); }
-  70%      { transform: translate3d(-3px, -10px, 0) rotate(-0.45deg); }
-}
-
-.js .work-card .float { animation: float-a 13s ease-in-out infinite; }
-.js .work-card:nth-child(2) .float { animation-name: float-b; animation-duration: 16s; animation-delay: -6s; }
-.js .work-card:nth-child(3) .float { animation-name: float-c; animation-duration: 11s; animation-delay: -3s; }
-.js .work-card:nth-child(1) .float { animation-delay: -9s; }
-
-.js .work-card:focus-visible { outline-offset: 6px; }
-
-/* the drifting is paused whenever the carousel is off screen (script.js), so it
-   costs nothing while you are reading the rest of the page */
-.js .carousel.is-offscreen .float { animation-play-state: paused; }
-
-/* controls: plain arrows at the left and right sides of the screen, level
-   with the screenshots. No circle, border or fill; the carousel is centred in
-   the page, so 50% - 50vw puts them at the edges of the viewport. */
-.carousel { --cw: min(34rem, 78vw); }
-.js .carousel { position: relative; }
-
-.js .car-controls {
-  position: absolute;
-  inset: 0;
-  margin: 0;
-  display: block;
-  pointer-events: none;
-}
-
-.car-arrow {
-  position: absolute;
-  /* middle of the foreground screenshot: stage padding + half the browser window */
-  top: calc(2.25rem + (var(--cw) / 2.097 + 2.4rem) / 2 - 1.5rem);
-  z-index: 5;
-  width: 3rem;
-  height: 3rem;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  color: var(--ink);
-  padding: 0;
-  cursor: pointer;
-  pointer-events: auto;
-  transition: transform 160ms var(--ease), opacity 160ms var(--ease);
-}
-.car-prev { left: calc(50% - 50vw + 1.5rem); }
-.car-next { right: calc(50% - 50vw + 1.5rem); }
-.car-arrow svg { width: 2.1rem; height: 2.1rem; }
-.car-prev:hover:not(:disabled),
-.car-prev:focus-visible:not(:disabled) { transform: translateX(-4px); }
-.car-next:hover:not(:disabled),
-.car-next:focus-visible:not(:disabled) { transform: translateX(4px); }
-.car-arrow:disabled { opacity: 0.25; cursor: default; }
-
-/* the live-region text is for screen readers only */
-.js .car-status {
-  display: block;
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-@media (max-width: 860px) {
-  .carousel { --cw: min(34rem, 74vw); }
-  /* phones: hug the screen edge so the arrows stay off the front screenshot */
-  .car-prev { left: calc(50% - 50vw + 0.1rem); }
-  .car-next { right: calc(50% - 50vw + 0.1rem); }
-  .js .work-card[data-pos="-1"] { transform: translateX(-70%) scale(0.78); }
-  .js .work-card[data-pos="1"]  { transform: translateX(70%) scale(0.78); }
-}
-
 /* ---------- PHONES: the name docks into a bar that is just the name ----------
    Only when the animation is running (html.anim: JS on, reduced motion off).
    The bar has nothing in it at first, so it takes no space and the hero fills
@@ -1044,9 +1612,6 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 .nav-bg { display: none; }
 
 @media (max-width: 860px) {
-  /* ordinary nav keeps its small name when the animation is not running */
-  html:not(.anim) .home .nav-brand { visibility: visible; }
-
   .anim .home .topnav {
     position: fixed;
     top: 0;
@@ -1065,7 +1630,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   }
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     .anim .home .nav-bg {
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba(var(--page-bg-rgb), 0.8);
       -webkit-backdrop-filter: saturate(180%) blur(18px);
       backdrop-filter: saturate(180%) blur(18px);
     }
@@ -1153,22 +1718,14 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   transition:
     opacity 500ms var(--ease) var(--d, 0s),
     translate 500ms var(--ease) var(--d, 0s),
-    transform 120ms var(--ease),
-    background-color 160ms var(--ease),
-    border-color 160ms var(--ease),
-    color 160ms var(--ease);
+    /* the rest keeps a revealed button's own hover timing */
+    transform 500ms,
+    background-color 500ms,
+    border-color 500ms,
+    color 500ms,
+    box-shadow 500ms;
 }
 .anim .reveal.in { opacity: 1; translate: 0 0; }
-
-/* service cards keep their slower docbrianna-style hover alongside the rise */
-.anim .service-card.reveal {
-  transition:
-    opacity 500ms var(--ease) var(--d, 0s),
-    translate 500ms var(--ease) var(--d, 0s),
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    background-color 0.25s ease;
-}
 
 /* how it works: the line between the circles draws across after each step lands */
 .anim .step:not(:last-child)::before {
@@ -1220,3 +1777,55 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 .td .nav-bg { transition: opacity 0.35s ease; }
 .td.td-instant .name-float .nf-word,
 .td.td-instant .nav-bg { transition: none; }
+
+/* ---------- THEME TOGGLE AND CURTAIN ----------
+   Ported from a 21st.dev React component (icon variant; its numbers, not its
+   code). A small round button at the bottom right switches between the light
+   and dark themes. script.js runs the "curtain": a sheet in the NEW theme's
+   background colour wipes down from the top, the theme changes behind it, and
+   the sheet pulls back up. The curtain covers the page and the side index
+   (z-index 49) but not the top bar (50) or the button (51). */
+
+.theme-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 49;
+  transform-origin: top;
+  transform: scaleY(0);
+  pointer-events: none;
+}
+
+.theme-toggle { display: none; }      /* it only works with JS */
+.js .theme-toggle {
+  position: fixed;
+  right: max(2.5vw, 1rem);
+  bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  z-index: 51;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: 0 0 0 1.5px var(--ink-soft);   /* --rule was too faint to see the button's edge */
+  cursor: pointer;
+  transition: background-color .3s ease, color .3s ease, transform .15s ease, box-shadow .3s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .theme-toggle:hover { transform: scale(1.1); }
+}
+.theme-toggle:active { transform: scale(.96); }
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* the moon offers dark mode (shown in light); the sun offers light (shown in dark) */
+.theme-toggle .theme-sun { display: none; }
+[data-theme="dark"] .theme-toggle .theme-sun { display: block; }
+[data-theme="dark"] .theme-toggle .theme-moon { display: none; }

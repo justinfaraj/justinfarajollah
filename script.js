@@ -1,16 +1,114 @@
-// Contact page only: on desktop, "sms:" links usually do nothing, so offer a
-// copy-number button instead. Phones get the sms: button via CSS.
+// Contact details. The phone number and the email address never appear in the
+// HTML: both are put together from pieces here, and only when someone clicks.
+// Phones get "Text me" (opens the text app with a message typed); desktops,
+// where sms: usually does nothing, get the copy buttons instead (CSS picks
+// which shows). "Email me" opens a draft with the subject and message filled
+// in, and so does the footer's "Email me" link on every page.
 (function () {
-  var btn = document.getElementById('copy-phone');
-  if (!btn || !navigator.clipboard) return;
+  var MESSAGE = "Hey Justin, I'm looking to build a site";                 // the text message
+  var SUBJECT = 'Website Inquiry';                                         // the email's subject line
+  // the email, laid out like an email: greeting, a blank line, then the message
+  var EMAIL_BODY = "Hey Justin,\r\n\r\nI'm looking to build a site. Can we chat?";
 
-  btn.hidden = false;
-  btn.addEventListener('click', function () {
-    navigator.clipboard.writeText(btn.dataset.copy).then(function () {
-      var label = btn.textContent;
-      btn.textContent = 'Copied';
-      setTimeout(function () { btn.textContent = label; }, 1800);
+  function number() { return ['+1', '516', '729', '4010'].join(''); }
+  function address() { return ['hello', '@', 'justinfarajollah', '.com'].join(''); }
+
+  function openText(e) {
+    e.preventDefault();
+    window.location.href = 'sms:' + number() + '?&body=' + encodeURIComponent(MESSAGE);
+  }
+
+  function openEmail(e) {
+    e.preventDefault();
+    window.location.href = 'mailto:' + address() + '?subject=' + encodeURIComponent(SUBJECT) +
+      '&body=' + encodeURIComponent(EMAIL_BODY);
+  }
+
+  // A copy button stays hidden unless the browser can copy. The value goes to
+  // the clipboard only, never into the page; the button says "Copied" for a moment.
+  var status = document.getElementById('copy-status');      // unseen line that screen readers read out
+
+  function copyButton(btn, value, what) {
+    if (!btn || !navigator.clipboard) return;
+    var label = btn.textContent;
+    btn.hidden = false;
+    btn.addEventListener('click', function () {
+      navigator.clipboard.writeText(value()).then(function () {
+        btn.textContent = 'Copied';
+        if (status) status.textContent = what + ' copied';
+        setTimeout(function () {
+          btn.textContent = label;
+          if (status) status.textContent = '';
+        }, 1800);
+      });
     });
+  }
+
+  var text = document.getElementById('text-me');
+  if (text) text.addEventListener('click', openText);
+
+  var email = document.getElementById('email-me');
+  if (email) {
+    email.hidden = false;
+    email.addEventListener('click', openEmail);
+  }
+
+  copyButton(document.getElementById('copy-phone'), number, 'Number');
+  copyButton(document.getElementById('copy-email'), address, 'Email address');
+
+  // footer "Email me", all three pages. Without JS it is an ordinary link to
+  // the contact page.
+  Array.prototype.forEach.call(document.querySelectorAll('.footer-email'), function (link) {
+    link.addEventListener('click', openEmail);
+  });
+})();
+
+// Contact page: "Let's work together" (see styles.css). Clicking the headline,
+// or the round button under it, fades the first view out and brings in the
+// "Let's talk" panel. Ported from a 21st.dev React component: the numbers are
+// the original's. All the motion is CSS; this block only switches two classes
+// on the section and looks after focus and screen readers.
+(function () {
+  var CLICK_TO_SUCCESS_MS = 500;               // original: 500
+  var EASE = 'cubic-bezier(.16,1,.3,1)';       // original: cubic-bezier(0.16, 1, 0.3, 1)
+
+  var root = document.querySelector('.lw');
+  if (!root) return;
+  var head = root.querySelector('.lw-head');
+  var trigger = document.getElementById('lw-trigger');
+  var panel = document.getElementById('lw-panel');
+  var talk = document.getElementById('lw-talk');
+  var firstView = root.querySelectorAll('.lw-avail, .lw-head, .lw-bottom');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var clicked = false;
+
+  root.style.setProperty('--lw-ease', EASE);
+
+  // Until it is revealed the panel is invisible, so it is also kept out of the
+  // tab order and away from screen readers. This is set here and not in the
+  // HTML so that, with JS off, the panel is an ordinary working part of the page.
+  panel.setAttribute('inert', '');
+  panel.setAttribute('aria-hidden', 'true');
+
+  function succeed() {
+    root.classList.add('is-success');
+    panel.removeAttribute('inert');
+    panel.removeAttribute('aria-hidden');
+    trigger.setAttribute('aria-expanded', 'true');
+    talk.focus({ preventScroll: true });
+  }
+
+  // one listener covers a mouse click anywhere on the headline group and the
+  // button itself (a key press on the button arrives here as a click too)
+  head.addEventListener('click', function () {
+    if (clicked) return;
+    clicked = true;
+    root.classList.add('is-clicked');
+    // the first view is fading out: nothing in it may be tabbed to any more
+    Array.prototype.forEach.call(firstView, function (el) { el.setAttribute('inert', ''); });
+    // reduced motion is read at the moment of the click, so a change to the
+    // setting is always respected: no wait, and CSS switches states instantly
+    setTimeout(succeed, reduce.matches ? 0 : CLICK_TO_SUCCESS_MS);
   });
 })();
 
@@ -31,7 +129,42 @@
     layer.style.clipPath = 'inset(' + top + 'px 0 ' + bottom + 'px 0)';
   }
 
+  // The side index (desktop navigation, see styles.css) rides on this block:
+  // the same observer tells it which section is current, and the same scroll
+  // handler turns it white while it sits over a navy band.
+  var sideNav = document.querySelector('.side-nav');
+  var sideLinks = sideNav ? sideNav.querySelectorAll('.side-link') : [];
+  var tracksScroll = document.body.classList.contains('home');   // other pages have a fixed (or no) current item
+  var SIDE_HREF = {            // a section's data-label -> the href of its item
+    Home: '#home', About: '#about', Work: '#work',
+    Services: '#services', Process: '#process', FAQ: '#faq'
+  };
+
+  // The closing band has no item of its own ("Contact" in the index is a link
+  // to the contact page, not to that band), so over it nothing is marked.
+  function setCurrent(name) {
+    if (!tracksScroll) return;
+    Array.prototype.forEach.call(sideLinks, function (link) {
+      if (link.getAttribute('href') === SIDE_HREF[name]) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    });
+  }
+
+  function updateSide() {
+    if (!sideNav) return;
+    var r = sideNav.getBoundingClientRect();
+    if (!r.height) return;                     // hidden below the breakpoint
+    var mid = r.top + r.height / 2;
+    var onInk = false;
+    darkBands.forEach(function (band) {
+      var b = band.getBoundingClientRect();
+      if (mid >= b.top && mid <= b.bottom) onInk = true;
+    });
+    sideNav.classList.toggle('on-ink', onInk);
+  }
+
   function update() {
+    updateSide();
     var rect = label.getBoundingClientRect();
     var height = rect.height;
     if (!height) return;
@@ -78,6 +211,7 @@
         if (!entry.isIntersecting) return;
         // a longer word changes the label's height, so remeasure with the swap
         texts.forEach(function (n) { n.textContent = entry.target.dataset.label; });
+        setCurrent(entry.target.dataset.label);
         update();
       });
     }, { rootMargin: '-45% 0px -45% 0px' });
@@ -289,7 +423,7 @@
     '.section-heading-center, .section-lede',
     '.service-card',
     '.step',
-    '.steps-cta, .carousel',
+    '.steps-cta, .faq-list',
     '.cta-heading, .cta-section .btn'
   ];
   var items = [];
@@ -571,83 +705,366 @@
   revealed();
 })();
 
-// Recent work carousel (see styles.css). One project is in the foreground, its
-// neighbours sit behind it on either side. The list is not circular: when
-// there would be two cards on one side, only the nearest is shown and the other
-// is parked off the edge of the screen (data-pos -2 / 2).
+// Recent work: stacking cards (see styles.css). Each project sits in a
+// full-height item that pins under the nav; the next one slides up over it
+// while the earlier cards shrink back, one after another. Ported from a
+// 21st.dev React + GSAP component: the numbers are the original's. CSS does the
+// pinning; this block only hands CSS the sizes and writes each card's scale.
 (function () {
-  var root = document.getElementById('work-carousel');
-  if (!root) return;
+  var STEP = 0.05;              // original: 0.05   scale given up per card stacked on top
+  var OFFSET_PX = 25;           // original: 25     each card sits this much lower than the last
+  var TOP_SHIFT_SVH = -5;       // original: -5     the pile sits a little above the middle
+  var CARD_W = '70%';           // original: "70%"
+  // (the original's fixed card height, 450, is gone: a card is now as tall as
+  // its screenshot needs, so nothing is cut off; see styles.css)
+  var RADIUS_PX = 24;           // original: 24
+  var BORDER_PX = 3;            // original: 3      thickness of the ring
+  var ELECTRIC_BORDER = true;   // false switches the ring around each card off
 
-  var cards = Array.prototype.slice.call(root.querySelectorAll('.work-card'));
-  var prev = root.querySelector('.car-prev');
-  var next = root.querySelector('.car-next');
-  var status = root.querySelector('.car-status');
-  var stage = root.querySelector('.car-stage');
-  var active = 0;
-  cards.forEach(function (c, i) { if (c.hasAttribute('aria-current')) active = i; });
+  var stack = document.getElementById('work-stack');
+  if (!stack) return;
+  var items = Array.prototype.slice.call(stack.children);
+  var cards = items.map(function (item) { return item.querySelector('.stack-card'); });
+  var count = cards.length;
+  if (!count) return;
 
-  function render() {
-    cards.forEach(function (card, i) {
-      var pos = Math.max(-2, Math.min(2, i - active));
-      var parked = Math.abs(pos) === 2;
-      card.setAttribute('data-pos', pos);
-      card.setAttribute('aria-hidden', parked ? 'true' : 'false');
-      card.tabIndex = parked ? -1 : 0;
-      if (i === active) card.setAttribute('aria-current', 'true');
-      else card.removeAttribute('aria-current');
-    });
-    prev.disabled = active === 0;
-    next.disabled = active === cards.length - 1;
-    status.textContent = 'Showing ' + cards[active].getAttribute('data-name') +
-      ', project ' + (active + 1) + ' of ' + cards.length;
-  }
+  stack.style.setProperty('--stack-w', CARD_W);
+  stack.style.setProperty('--stack-radius', RADIUS_PX + 'px');
+  stack.style.setProperty('--stack-border', BORDER_PX + 'px');
+  stack.style.setProperty('--stack-offset', OFFSET_PX + 'px');
+  stack.style.setProperty('--stack-shift', TOP_SHIFT_SVH + 'svh');
 
-  function go(to) {
-    if (to < 0 || to > cards.length - 1 || to === active) return;
-    active = to;
-    render();
-  }
-
-  // a card behind the foreground comes forward; the foreground card is a
-  // normal link and takes you to the site
   cards.forEach(function (card, i) {
-    card.addEventListener('click', function (e) {
-      if (i !== active) {
-        e.preventDefault();
-        go(i);
-      }
+    card.style.setProperty('--i', i);
+    if (ELECTRIC_BORDER) {
+      var ring = document.createElement('span');
+      ring.className = 'stack-ring';
+      card.insertBefore(ring, card.firstChild);
+    }
+  });
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+
+  // Nothing is cached: every frame re-reads where the wrapper is.
+  function update() {
+    var rect = stack.getBoundingClientRect();
+    var innerHeight = window.innerHeight;
+    if (rect.bottom < 0 || rect.top > innerHeight) return;      // entirely off screen
+
+    // reduced motion keeps the stacking but not the shrinking; so does the plain
+    // list (no JS layout on very short screens), where nothing is pinned
+    var still = reduce.matches || getComputedStyle(items[0]).position !== 'sticky';
+
+    var scrollY = window.scrollY;
+    var wrapperTopAbs = scrollY + rect.top;
+    var itemHeight = items[0].clientHeight;
+
+    for (var i = 0; i < count; i++) {
+      if (still) { cards[i].style.transform = ''; continue; }
+      // card i starts shrinking when its natural (un-pinned) top reaches the
+      // middle of the screen and is done when its natural bottom gets there
+      var target = 1 - (count - i) * STEP;
+      var progress = clamp((scrollY - (wrapperTopAbs + i * itemHeight - innerHeight / 2)) / itemHeight, 0, 1);
+      var scale = 1 + (target - 1) * progress;
+      cards[i].style.transform = 'scale(' + scale + ')';
+    }
+  }
+
+  var pending = false;
+  function schedule() {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(function () { pending = false; update(); });
+  }
+
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  window.addEventListener('load', schedule);      // fonts and images can move the section
+
+  // Hover, mouse only: the card under the cursor grows a touch (CSS, .is-hot)
+  // and leans a few pixels toward the cursor on a spring, so it trails the
+  // mouse with a little tension and settles back when the mouse leaves. This
+  // uses the separate `translate` and `scale` properties, so it never fights
+  // the stacking transform written above.
+  var FOLLOW_PX = 7;          // the most a card leans toward the cursor
+  var STIFFNESS = 170;        // spring: higher follows more tightly
+  var DAMPING = 19;           // spring: lower wobbles more
+  var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+  cards.forEach(function (card) {
+    var x = 0, y = 0, vx = 0, vy = 0, tx = 0, ty = 0, raf = 0, last = 0;
+
+    function frame(now) {
+      var dt = Math.min(0.032, (now - last) / 1000 || 0.016);
+      last = now;
+      vx += (STIFFNESS * (tx - x) - DAMPING * vx) * dt;
+      vy += (STIFFNESS * (ty - y) - DAMPING * vy) * dt;
+      x += vx * dt;
+      y += vy * dt;
+      var settled = Math.abs(tx - x) < 0.02 && Math.abs(ty - y) < 0.02 && Math.abs(vx) < 0.02 && Math.abs(vy) < 0.02;
+      if (settled) { x = tx; y = ty; vx = vy = 0; }
+      card.style.translate = (x || y) ? x.toFixed(2) + 'px ' + y.toFixed(2) + 'px' : '';
+      raf = settled ? 0 : requestAnimationFrame(frame);
+    }
+    function wake() {
+      if (raf) return;
+      last = performance.now();
+      raf = requestAnimationFrame(frame);
+    }
+
+    card.addEventListener('pointermove', function (e) {
+      if (e.pointerType !== 'mouse' || !finePointer.matches || reduce.matches) return;
+      var r = card.getBoundingClientRect();
+      // where the cursor is across the card, -1 to 1 each way (measured from
+      // the card's resting centre, without the lean it already has)
+      var px = clamp((e.clientX - (r.left + r.width / 2 - x)) / (r.width / 2), -1, 1);
+      var py = clamp((e.clientY - (r.top + r.height / 2 - y)) / (r.height / 2), -1, 1);
+      tx = px * FOLLOW_PX;
+      ty = py * FOLLOW_PX;
+      card.classList.add('is-hot');
+      wake();
+    });
+    card.addEventListener('pointerleave', function () {
+      tx = ty = 0;
+      card.classList.remove('is-hot');
+      wake();
+    });
+  });
+  if (reduce.addEventListener) reduce.addEventListener('change', schedule);
+  else if (reduce.addListener) reduce.addListener(schedule);
+
+  update();
+})();
+
+// "What I do" cards: a soft round glow follows the cursor inside each card.
+// The glow itself is the card's ::before in styles.css (size, scale, timing and
+// opacity are set there); this block only tells it where the cursor is, through
+// --gx / --gy. Mouse and pen only: on touch nothing happens.
+(function () {
+  var cards = document.querySelectorAll('.service-card');
+
+  Array.prototype.forEach.call(cards, function (card) {
+    var x = 0, y = 0, pending = false;
+
+    // cursor position measured from the inside corner of the card (inside its
+    // border), which is what the glow's left/top are measured from
+    function place() {
+      pending = false;
+      var r = card.getBoundingClientRect();
+      card.style.setProperty('--gx', (x - r.left - card.clientLeft) + 'px');
+      card.style.setProperty('--gy', (y - r.top - card.clientTop) + 'px');
+    }
+
+    function precise(e) { return e.pointerType === 'mouse' || e.pointerType === 'pen'; }
+
+    // on the way in, place it first, so the glow grows from the cursor and
+    // never from wherever it was left last time
+    card.addEventListener('pointerenter', function (e) {
+      if (!precise(e)) return;
+      x = e.clientX; y = e.clientY;
+      place();
+      card.classList.add('is-glowing');
+    });
+
+    card.addEventListener('pointermove', function (e) {
+      if (!precise(e)) return;
+      x = e.clientX; y = e.clientY;
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(place);
+    });
+
+    // on the way out the glow shrinks back where it stands
+    function off() { card.classList.remove('is-glowing'); }
+    card.addEventListener('pointerleave', off);
+    card.addEventListener('pointercancel', off);
+  });
+})();
+
+// Theme toggle and curtain (see styles.css), every page. The site is light
+// unless the visitor has chosen dark: their choice is saved in the browser and
+// kept for as long as the browser keeps it. The small script in each page's
+// <head> applies the saved choice before the first paint; this block runs the
+// button. A press drops a sheet in the new theme's colour from the top,
+// changes the theme behind it, and pulls the sheet back up. Ported from a
+// 21st.dev React component: the numbers are the original's.
+(function () {
+  var DURATION = 550;                                 // original: 550 (ms), each way
+  var EASING = 'cubic-bezier(0.76, 0, 0.24, 1)';      // original: cubic-bezier(0.76, 0, 0.24, 1)
+  var SETTLE_PAD = 60;                                // original: 60 (ms)
+
+  var root = document.documentElement;
+  var btn = document.getElementById('theme-toggle');
+  var curtain = document.getElementById('theme-curtain');
+  if (!btn) return;
+
+  var meta = document.querySelector('meta[name="theme-color"]');
+  // the head script keeps the light value here before it writes the dark one
+  var lightMeta = meta ? (meta.getAttribute('data-light') || meta.content) : '';
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var phase = 'idle';
+
+  function current() { return root.dataset.theme === 'dark' ? 'dark' : 'light'; }
+
+  // CSS is the one place the colours are written down
+  function pageBg(theme) {
+    return getComputedStyle(root).getPropertyValue(theme === 'dark' ? '--page-bg-dark' : '--page-bg-light').trim();
+  }
+
+  // the icon swaps by itself: CSS shows the moon or the sun from data-theme
+  function apply(theme) {
+    root.dataset.theme = theme;
+    if (meta) meta.content = theme === 'dark' ? pageBg('dark') : lightMeta;
+    btn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+  }
+
+  // storage can be blocked (private windows, strict settings): the theme then
+  // still changes, it just is not remembered
+  function save(theme) {
+    try { localStorage.setItem('theme', theme); } catch (e) {}
+  }
+
+  apply(current());
+
+  btn.addEventListener('click', function () {
+    if (phase !== 'idle') return;                     // mid-wipe: ignore
+    var target = current() === 'dark' ? 'light' : 'dark';
+
+    // reduced motion (read at the moment of the press): no curtain at all
+    if (reduce.matches || !curtain) {
+      apply(target);
+      save(target);
+      return;
+    }
+
+    // 1. falling: the sheet, already in the new theme's colour, wipes down
+    phase = 'falling';
+    curtain.style.background = pageBg(target);
+    void curtain.offsetHeight;                        // make the browser take that in before the motion starts
+    curtain.style.transition = 'transform ' + DURATION + 'ms ' + EASING;
+    curtain.style.transform = 'scaleY(1)';
+
+    setTimeout(function () {
+      // 2. the page is covered: change the theme, then pull the sheet back up
+      apply(target);
+      save(target);
+      phase = 'rising';
+      curtain.style.transform = 'scaleY(0)';
+
+      setTimeout(function () {
+        // 3. done
+        phase = 'idle';
+        curtain.style.transition = 'none';
+      }, DURATION + SETTLE_PAD);
+    }, DURATION);
+  });
+})();
+
+// Home page, "Common questions": turns the plain headings and answers in the
+// HTML into an accordion (see "FAQ" in styles.css). Everything is read from
+// the page, so a new question is just another .faq-item block. Ported from a
+// 21st.dev React + motion accordion; all the motion is CSS, this block builds
+// the buttons and panels and keeps the open/closed state and aria in step.
+(function () {
+  var TYPE = 'single';          // original: "single"   only one item open at a time ("multiple" lets several stay open)
+  var COLLAPSIBLE = true;       // original: true       the open item can be closed, leaving none open
+  var DEFAULT_OPEN = 0;         // original: the first item (its position in the list; -1 for none)
+
+  var list = document.querySelector('.faq-list');
+  if (!list) return;
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+
+  var items = Array.prototype.map.call(list.querySelectorAll('.faq-item'), function (item, i) {
+    var id = item.getAttribute('data-id') || String(i + 1);
+    var title = item.querySelector('.faq-title');
+    var body = item.querySelector('.faq-body');
+
+    // the heading stays a real heading; its text moves into a button inside it
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'faq-btn';
+    btn.id = 'faq-btn-' + id;
+    btn.setAttribute('aria-controls', 'faq-panel-' + id);
+    var q = document.createElement('span');
+    q.className = 'faq-q';
+    q.textContent = title.textContent;
+    var icon = document.createElementNS(SVG_NS, 'svg');
+    icon.setAttribute('class', 'faq-chevron');
+    icon.setAttribute('viewBox', '0 0 256 256');
+    icon.setAttribute('fill', 'none');
+    icon.setAttribute('aria-hidden', 'true');
+    var path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', 'M208 96l-80 80-80-80');
+    path.setAttribute('stroke', 'currentColor');
+    path.setAttribute('stroke-width', '16');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+    icon.appendChild(path);
+    btn.appendChild(q);
+    btn.appendChild(icon);
+    title.textContent = '';
+    title.appendChild(btn);
+
+    // the answer goes inside panel > clip, which is what lets CSS animate its height
+    var panel = document.createElement('div');
+    panel.className = 'faq-panel';
+    panel.id = 'faq-panel-' + id;
+    panel.setAttribute('role', 'region');
+    panel.setAttribute('aria-labelledby', btn.id);
+    var clip = document.createElement('div');
+    clip.className = 'faq-clip';
+    item.insertBefore(panel, body);
+    clip.appendChild(body);
+    panel.appendChild(clip);
+
+    return { item: item, btn: btn, panel: panel, open: false };
+  });
+  if (!items.length) return;
+
+  // a closed panel stays in the page at zero height, so it is also hidden from
+  // screen readers and its links are taken out of the tab order
+  function set(it, open) {
+    it.open = open;
+    it.item.classList.toggle('is-open', open);
+    it.btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) {
+      it.panel.removeAttribute('aria-hidden');
+      it.panel.inert = false;
+      it.panel.removeAttribute('inert');
+    } else {
+      it.panel.setAttribute('aria-hidden', 'true');
+      it.panel.inert = true;
+      it.panel.setAttribute('inert', '');
+    }
+  }
+
+  function toggle(it) {
+    if (it.open) {
+      if (COLLAPSIBLE) set(it, false);
+      return;
+    }
+    if (TYPE === 'single') items.forEach(function (other) { if (other.open) set(other, false); });
+    set(it, true);
+  }
+
+  items.forEach(function (it, i) {
+    set(it, i === DEFAULT_OPEN);
+    it.btn.addEventListener('click', function () { toggle(it); });
+    // arrows move between the questions (wrapping round), Home and End jump to
+    // the ends; Enter and Space toggle because these are real buttons
+    it.btn.addEventListener('keydown', function (e) {
+      var to = -1;
+      if (e.key === 'ArrowDown') to = (i + 1) % items.length;
+      else if (e.key === 'ArrowUp') to = (i - 1 + items.length) % items.length;
+      else if (e.key === 'Home') to = 0;
+      else if (e.key === 'End') to = items.length - 1;
+      if (to < 0) return;
+      e.preventDefault();
+      items[to].btn.focus();
     });
   });
 
-  prev.addEventListener('click', function () { go(active - 1); });
-  next.addEventListener('click', function () { go(active + 1); });
-
-  root.addEventListener('keydown', function (e) {
-    if (e.key === 'ArrowLeft') { go(active - 1); }
-    else if (e.key === 'ArrowRight') { go(active + 1); }
-  });
-
-  // swipe on touch screens
-  var startX = null;
-  stage.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; }, { passive: true });
-  stage.addEventListener('touchend', function (e) {
-    if (startX === null) return;
-    var dx = e.changedTouches[0].clientX - startX;
-    startX = null;
-    if (Math.abs(dx) > 50) go(dx < 0 ? active + 1 : active - 1);
-  }, { passive: true });
-
-  // pause the drifting while the carousel is off screen: saves battery and keeps
-  // scrolling smooth on the rest of the page
-  root.classList.add('is-offscreen');
-  if ('IntersectionObserver' in window) {
-    new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) { root.classList.toggle('is-offscreen', !entry.isIntersecting); });
-    }, { rootMargin: '120px 0px' }).observe(root);
-  } else {
-    root.classList.remove('is-offscreen');
-  }
-
-  render();
+  list.classList.add('is-ready');
 })();

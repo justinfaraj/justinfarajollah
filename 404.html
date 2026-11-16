@@ -14,6 +14,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Jost:wght@400;500&display=swap" rel="stylesheet">
+<script>
+document.documentElement.classList.add("js");
+/* theme, before the first paint: light, unless this visitor chose dark before */
+(function(){try{var t=null;try{t=localStorage.getItem("theme")}catch(e){}if(t!=="dark")t="light";document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute("data-light",m.content);if(t==="dark")m.content="#0B1220"}}catch(e){}})();
+</script>
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -28,14 +33,28 @@
   <span class="vertical-label-layer vertical-label-white"><span class="vertical-label-text">Not found</span></span>
 </div>
 
+<!-- Desktop navigation: a small index at the top right. On narrower screens
+     it is hidden and the links in the top bar are used instead. -->
+<nav class="side-nav" aria-label="Main">
+  <ol>
+    <li><a class="side-link" href="/">Home</a></li>
+    <li><a class="side-link" href="/#about">About</a></li>
+    <li><a class="side-link" href="/#work">Work</a></li>
+    <li><a class="side-link" href="/#services">What I do</a></li>
+    <li><a class="side-link" href="/#process">How it works</a></li>
+    <li><a class="side-link" href="/#faq">FAQ</a></li>
+    <li><a class="side-link" href="/contact">Contact</a></li>
+  </ol>
+</nav>
+
 <header class="topnav">
   <div class="topnav-inner">
     <a class="nav-brand" href="/">Justin Farajollah</a>
     <nav aria-label="Main">
       <ul class="nav-links">
         <li class="nav-sec"><a class="nav-link" href="/#about">About</a></li>
-        <li class="nav-sec"><a class="nav-link" href="/#services">Services</a></li>
         <li class="nav-sec"><a class="nav-link" href="/#work">Work</a></li>
+        <li class="nav-sec"><a class="nav-link" href="/#services">Services</a></li>
         <li><a class="btn btn-small" href="/contact">Contact</a></li>
       </ul>
     </nav>
@@ -76,19 +95,30 @@
     <div class="footer-brand">
       <a class="footer-name" href="/">Justin Farajollah</a>
       <p>Websites for small businesses</p>
-      <a class="text-link footer-email" href="mailto:hello@justinfarajollah.com">hello@justinfarajollah.com</a>
+      <p class="footer-links">
+        <a class="text-link footer-email" href="/contact">Email me</a>
+        <a class="text-link" href="https://www.linkedin.com/in/farajollah/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      </p>
     </div>
     <nav class="footer-nav" aria-label="Footer">
       <ul>
         <li><a href="/#about">About</a></li>
-        <li><a href="/#services">Services</a></li>
         <li><a href="/#work">Work</a></li>
+        <li><a href="/#services">Services</a></li>
         <li><a href="/contact">Contact</a></li>
       </ul>
     </nav>
   </div>
   <p class="footer-copy">&copy; 2026 Justin Farajollah</p>
 </footer>
+
+<!-- Theme: the curtain that wipes across when the theme changes, and the
+     button that changes it (script.js, last block). -->
+<div class="theme-curtain" id="theme-curtain" aria-hidden="true"></div>
+<button class="theme-toggle" id="theme-toggle" type="button" aria-label="Dark mode" aria-pressed="false">
+  <svg class="theme-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg class="theme-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+</button>
 
 <script src="/script.js"></script>
 </body>

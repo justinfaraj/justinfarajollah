@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Justin Farajollah | Websites for Small Businesses</title>
-<meta name="description" content="Justin Farajollah builds websites for small businesses. See recent work and book a chat.">
+<meta name="description" content="Justin Farajollah designs, builds and launches websites for small businesses. See recent work, what's included and how it works, then book a chat.">
 <meta name="theme-color" content="#0E1A33">
 <link rel="canonical" href="https://justinfarajollah.com/">
 <link rel="icon" href="/favicon.ico?v=2" sizes="any">
@@ -29,20 +29,49 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "ProfessionalService",
-  "name": "Justin Farajollah",
-  "url": "https://justinfarajollah.com/",
-  "image": "https://justinfarajollah.com/images/og-image.png?v=2",
-  "description": "Justin Farajollah builds websites for small businesses.",
-  "telephone": "+1-516-729-4010",
-  "email": "hello@justinfarajollah.com",
-  "serviceType": "Web design"
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://justinfarajollah.com/#website",
+      "url": "https://justinfarajollah.com/",
+      "name": "Justin Farajollah",
+      "description": "Justin Farajollah builds websites for small businesses.",
+      "inLanguage": "en",
+      "publisher": { "@id": "https://justinfarajollah.com/#business" }
+    },
+    {
+      "@type": "Person",
+      "@id": "https://justinfarajollah.com/#person",
+      "name": "Justin Farajollah",
+      "url": "https://justinfarajollah.com/",
+      "image": "https://justinfarajollah.com/images/justin-farajollah.webp",
+      "jobTitle": "Web developer",
+      "description": "Justin Farajollah is a student at Indiana University's Kelley School of Business who builds websites for small businesses.",
+      "knowsAbout": ["Web design", "Website development", "SEO", "AI search optimization", "Logo design"],
+      "sameAs": ["https://www.linkedin.com/in/farajollah/"],
+      "worksFor": { "@id": "https://justinfarajollah.com/#business" }
+    },
+    {
+      "@type": "ProfessionalService",
+      "@id": "https://justinfarajollah.com/#business",
+      "name": "Justin Farajollah",
+      "url": "https://justinfarajollah.com/",
+      "image": "https://justinfarajollah.com/images/og-image.png?v=2",
+      "description": "Justin Farajollah builds websites for small businesses.",
+      "serviceType": "Web design",
+      "founder": { "@id": "https://justinfarajollah.com/#person" }
+    }
+  ]
 }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Jost:wght@400;500&display=swap" rel="stylesheet">
-<script>var c=document.documentElement.classList;c.add("js");if(!matchMedia("(prefers-reduced-motion: reduce)").matches)c.add("anim")</script>
+<script>
+var c=document.documentElement.classList;c.add("js");if(!matchMedia("(prefers-reduced-motion: reduce)").matches)c.add("anim");
+/* theme, before the first paint: light, unless this visitor chose dark before */
+(function(){try{var t=null;try{t=localStorage.getItem("theme")}catch(e){}if(t!=="dark")t="light";document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute("data-light",m.content);if(t==="dark")m.content="#0B1220"}}catch(e){}})();
+</script>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body class="home">
@@ -53,6 +82,20 @@
   <span class="vertical-label-layer vertical-label-ink"><span class="vertical-label-text">Home</span></span>
   <span class="vertical-label-layer vertical-label-white"><span class="vertical-label-text">Home</span></span>
 </div>
+
+<!-- Desktop navigation: a small index at the top right. On narrower screens
+     it is hidden and the links in the top bar are used instead. -->
+<nav class="side-nav" aria-label="Main">
+  <ol>
+    <li><a class="side-link" href="#home">Home</a></li>
+    <li><a class="side-link" href="#about">About</a></li>
+    <li><a class="side-link" href="#work">Work</a></li>
+    <li><a class="side-link" href="#services">What I do</a></li>
+    <li><a class="side-link" href="#process">How it works</a></li>
+    <li><a class="side-link" href="#faq">FAQ</a></li>
+    <li><a class="side-link" href="contact">Contact</a></li>
+  </ol>
+</nav>
 
 <!-- Scroll-linked copy of the hero name: it starts exactly over the hero heading
      and, as you scroll, rearranges onto one line and docks where the small nav
@@ -67,8 +110,8 @@
     <nav aria-label="Main">
       <ul class="nav-links">
         <li class="nav-sec"><a class="nav-link" href="#about">About</a></li>
-        <li class="nav-sec"><a class="nav-link" href="#services">Services</a></li>
         <li class="nav-sec"><a class="nav-link" href="#work">Work</a></li>
+        <li class="nav-sec"><a class="nav-link" href="#services">Services</a></li>
         <li><a class="btn btn-small" href="contact">Contact</a></li>
       </ul>
     </nav>
@@ -87,7 +130,7 @@
         <p class="hero-subheading">I build websites for small businesses</p>
         <p class="hero-tagline">Let's build yours</p>
         <span class="hero-rule" aria-hidden="true"></span>
-        <a class="btn" href="contact">Contact me</a>
+        <a class="btn btn-solid" href="contact">Contact me</a>
       </section>
 
       <section class="about" id="about" data-label="About">
@@ -109,14 +152,81 @@
 
     <aside class="story-photo">
       <div class="photo-pin">
-        <img src="images/justin-farajollah.webp" width="900" height="900" alt="Justin Farajollah">
+        <img src="images/justin-farajollah.webp" width="900" height="900" fetchpriority="high" alt="Justin Farajollah">
       </div>
     </aside>
 
   </div>
 
-  <!-- SECTION 3: SERVICES -->
-  <section class="section section-stone" id="services" data-label="Services">
+  <!-- SECTION 3: RECENT WORK -->
+  <section class="section section-stone" id="work" data-label="Work">
+    <div class="section-inner">
+      <h2 class="section-heading section-heading-center">Recent work</h2>
+    </div>
+
+    <!-- Stacking cards: with JS, each project pins under the nav and the next
+         one slides up over it while the earlier card shrinks back (script.js,
+         "stacking cards"). The order here is the stacking order, so the last card
+         ends on top; a new project is just one more .stack-item. Without JS
+         these are plain linked cards in a list. -->
+    <div class="stack" id="work-stack">
+
+      <div class="stack-item">
+        <a class="stack-card" href="https://docbrianna.com" target="_blank" rel="noopener noreferrer">
+          <div class="stack-face">
+            <div class="stack-shot">
+              <img src="images/work-docbrianna.webp" width="1600" height="763" loading="eager" draggable="false" alt="Screenshot of the docbrianna.com homepage, a website for a medical and cosmetic dermatologist">
+            </div>
+            <div class="stack-foot">
+              <div class="stack-text">
+                <h3>Dr. Brianna Olamiju</h3>
+                <p>Website for a medical and cosmetic dermatologist</p>
+              </div>
+              <span class="text-link">Visit docbrianna.com &rarr;</span>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="stack-item">
+        <a class="stack-card" href="https://ultimateavi.net" target="_blank" rel="noopener noreferrer">
+          <div class="stack-face">
+            <div class="stack-shot">
+              <img src="images/work-ultimateavi.webp" width="1600" height="761" loading="eager" draggable="false" alt="Screenshot of the ultimateavi.net homepage, a website for a smart home and AV integrator">
+            </div>
+            <div class="stack-foot">
+              <div class="stack-text">
+                <h3>Ultimate AVI</h3>
+                <p>Website for a smart home and AV integrator</p>
+              </div>
+              <span class="text-link">Visit ultimateavi.net &rarr;</span>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="stack-item">
+        <a class="stack-card" href="https://eaglepointcoaching.co" target="_blank" rel="noopener noreferrer">
+          <div class="stack-face">
+            <div class="stack-shot">
+              <img src="images/work-eaglepoint.webp" width="1600" height="763" loading="eager" draggable="false" alt="Screenshot of the eaglepointcoaching.co homepage, a website for an executive coaching practice">
+            </div>
+            <div class="stack-foot">
+              <div class="stack-text">
+                <h3>Eagle Point Coaching</h3>
+                <p>Website for an executive coaching practice</p>
+              </div>
+              <span class="text-link">Visit eaglepointcoaching.co &rarr;</span>
+            </div>
+          </div>
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SECTION 4: SERVICES -->
+  <section class="section" id="services" data-label="Services">
     <div class="section-inner">
       <h2 class="section-heading section-heading-center">What I do</h2>
       <p class="section-lede">Everything a small business needs to get online, handled by one person.</p>
@@ -142,8 +252,8 @@
     </div>
   </section>
 
-  <!-- SECTION 4: HOW IT WORKS -->
-  <section class="section" id="process" data-label="Process">
+  <!-- SECTION 5: HOW IT WORKS -->
+  <section class="section section-stone" id="process" data-label="Process">
     <div class="section-inner">
       <h2 class="section-heading section-heading-center">How it works</h2>
 
@@ -175,65 +285,63 @@
     </div>
   </section>
 
-  <!-- SECTION 5: RECENT WORK -->
-  <section class="section section-stone" id="work" data-label="Work">
+  <!-- SECTION 6: COMMON QUESTIONS
+       Plain headings and answers here; script.js turns them into an accordion
+       (one open at a time). Without JS every answer is simply shown. To add a
+       question, copy one .faq-item block and give it a new data-id. -->
+  <section class="section" id="faq" data-label="FAQ">
     <div class="section-inner">
-      <h2 class="section-heading section-heading-center">Recent work</h2>
+      <h2 class="section-heading section-heading-center">Common questions</h2>
 
-      <!-- Floating carousel: one project in the foreground, its neighbours behind
-           and to either side. script.js sets data-pos (-2..2) on each card;
-           without JS the cards simply sit in a grid of plain links. -->
-      <div class="carousel" id="work-carousel" role="region" aria-roledescription="carousel" aria-label="Recent work">
-        <div class="car-stage">
-
-        <a class="work-card" data-pos="-1" data-name="Ultimate AVI" href="https://ultimateavi.net" target="_blank" rel="noopener noreferrer">
-          <div class="float">
-            <div class="browser">
-              <div class="browser-bar" aria-hidden="true"><span></span><span></span><span></span><em>ultimateavi.net</em></div>
-              <img src="images/work-ultimateavi.webp" width="1600" height="761" loading="lazy" alt="Screenshot of the ultimateavi.net homepage, a website for a smart home and AV integrator">
-            </div>
-            <h3>Ultimate AVI</h3>
-            <p>Website for a smart home and AV integrator</p>
-            <span class="text-link">Visit ultimateavi.net &rarr;</span>
+      <div class="faq-list">
+        <div class="faq-item" data-id="build">
+          <h3 class="faq-title">What do you build?</h3>
+          <div class="faq-body">
+            <p>Websites for small businesses, handled by one person: the design, the build, and getting it live on your own address. I also take on smaller one-off projects like SEO, AI search optimization and logo design.</p>
           </div>
-        </a>
-
-        <a class="work-card" data-pos="0" data-name="Dr. Brianna Olamiju" aria-current="true" href="https://docbrianna.com" target="_blank" rel="noopener noreferrer">
-          <div class="float">
-            <div class="browser">
-              <div class="browser-bar" aria-hidden="true"><span></span><span></span><span></span><em>docbrianna.com</em></div>
-              <img src="images/work-docbrianna.webp" width="1600" height="761" loading="lazy" alt="Screenshot of the docbrianna.com homepage, a website for a medical and cosmetic dermatologist">
-            </div>
-            <h3>Dr. Brianna Olamiju</h3>
-            <p>Website for a medical and cosmetic dermatologist</p>
-            <span class="text-link">Visit docbrianna.com &rarr;</span>
-          </div>
-        </a>
-
-        <a class="work-card" data-pos="1" data-name="Eagle Point Coaching" href="https://eaglepointcoaching.co" target="_blank" rel="noopener noreferrer">
-          <div class="float">
-            <div class="browser">
-              <div class="browser-bar" aria-hidden="true"><span></span><span></span><span></span><em>eaglepointcoaching.co</em></div>
-              <img src="images/work-eaglepoint.webp" width="1600" height="761" loading="lazy" alt="Screenshot of the eaglepointcoaching.co homepage, a website for an executive coaching practice">
-            </div>
-            <h3>Eagle Point Coaching</h3>
-            <p>Website for an executive coaching practice</p>
-            <span class="text-link">Visit eaglepointcoaching.co &rarr;</span>
-          </div>
-        </a>
-
         </div>
-
-        <div class="car-controls">
-          <button class="car-arrow car-prev" type="button" aria-label="Show the previous project"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
-          <button class="car-arrow car-next" type="button" aria-label="Show the next project"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+        <div class="faq-item" data-id="who">
+          <h3 class="faq-title">Who do you build for?</h3>
+          <div class="faq-body">
+            <p>Small businesses. My most recent sites are for a dermatologist, an executive coaching practice and a smart home and AV integrator.</p>
+          </div>
         </div>
-        <p class="car-status" aria-live="polite"></p>
+        <div class="faq-item" data-id="how">
+          <h3 class="faq-title">How does it work?</h3>
+          <div class="faq-body">
+            <p>We talk, I design it, and it goes live. I put together a design for you to react to, and we adjust it until it feels right. Then I build and launch the site.</p>
+          </div>
+        </div>
+        <div class="faq-item" data-id="cost">
+          <h3 class="faq-title">How much does a website cost?</h3>
+          <div class="faq-body">
+            <p>Quotes are specific to each business, so the first step is to book a chat.</p>
+          </div>
+        </div>
+        <div class="faq-item" data-id="start">
+          <h3 class="faq-title">How do I get started?</h3>
+          <div class="faq-body">
+            <p>Book a chat, send a text or email me. Tell me about your business and what you want the site to do.</p>
+            <p><a class="text-link" href="contact">Start with a chat</a></p>
+          </div>
+        </div>
+        <div class="faq-item" data-id="updates">
+          <h3 class="faq-title">Can you update my site later?</h3>
+          <div class="faq-body">
+            <p>Yes. You can reach me if you need something updated after it goes live.</p>
+          </div>
+        </div>
+        <div class="faq-item" data-id="phones">
+          <h3 class="faq-title">Will it work on phones?</h3>
+          <div class="faq-body">
+            <p>Yes. The design is built to look good on phones and computers.</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- SECTION 6: CLOSING CTA -->
+  <!-- SECTION 7: CLOSING CTA -->
   <section class="section section-ink cta-section" id="contact-cta" data-label="Contact">
     <div class="section-inner section-inner-narrow">
       <h2 class="cta-heading">Ready for a website you're proud of?</h2>
@@ -248,19 +356,30 @@
     <div class="footer-brand">
       <a class="footer-name" href="./">Justin Farajollah</a>
       <p>Websites for small businesses</p>
-      <a class="text-link footer-email" href="mailto:hello@justinfarajollah.com">hello@justinfarajollah.com</a>
+      <p class="footer-links">
+        <a class="text-link footer-email" href="contact">Email me</a>
+        <a class="text-link" href="https://www.linkedin.com/in/farajollah/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      </p>
     </div>
     <nav class="footer-nav" aria-label="Footer">
       <ul>
         <li><a href="#about">About</a></li>
-        <li><a href="#services">Services</a></li>
         <li><a href="#work">Work</a></li>
+        <li><a href="#services">Services</a></li>
         <li><a href="contact">Contact</a></li>
       </ul>
     </nav>
   </div>
   <p class="footer-copy">&copy; 2026 Justin Farajollah</p>
 </footer>
+
+<!-- Theme: the curtain that wipes across when the theme changes, and the
+     button that changes it (script.js, last block). -->
+<div class="theme-curtain" id="theme-curtain" aria-hidden="true"></div>
+<button class="theme-toggle" id="theme-toggle" type="button" aria-label="Dark mode" aria-pressed="false">
+  <svg class="theme-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg class="theme-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+</button>
 
 <script src="script.js"></script>
 </body>
