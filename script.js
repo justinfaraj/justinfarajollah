@@ -276,6 +276,301 @@
   }
 })();
 
+// Home page: content below the hero rises gently into place the first time it
+// scrolls into view (see "ENTRANCE MOTION" in styles.css). Items in a group
+// (service cards, steps) follow each other by a beat. Nothing is hidden unless
+// html.anim is set, which already means JS is on and reduced motion is off.
+(function () {
+  var root = document.documentElement;
+  if (!root.classList.contains('anim') || !document.body.classList.contains('home')) return;
+
+  var groups = [
+    '.about > *',
+    '.section-heading-center, .section-lede',
+    '.service-card',
+    '.step',
+    '.steps-cta, .carousel',
+    '.cta-heading, .cta-section .btn'
+  ];
+  var items = [];
+  groups.forEach(function (sel) {
+    var parents = new Map();
+    document.querySelectorAll(sel).forEach(function (el) {
+      // stagger only among siblings, so each section starts its own count
+      var n = parents.get(el.parentNode) || 0;
+      parents.set(el.parentNode, n + 1);
+      el.style.setProperty('--d', Math.min(n, 5) * 0.06 + 's');
+      el.classList.add('reveal');
+      items.push(el);
+    });
+  });
+
+  if (!('IntersectionObserver' in window)) {
+    items.forEach(function (el) { el.classList.add('in'); });
+    return;
+  }
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('in');
+      io.unobserve(entry.target);
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+  items.forEach(function (el) { io.observe(el); });
+})();
+
+// Home page, "How it works": the steps lean toward the mouse, and the line
+// joining them behaves like a string. Experimental; to remove it, delete this
+// whole block and the .steps-wrap div + svg in index.html (the plain CSS line
+// comes back by itself).
+//
+// What keeps it from feeling cheap:
+//   - Small. The number circle travels at most ~12px; nothing ever jumps.
+//   - Depth. Each step moves as three layers: the circle the most, the title
+//     less, the paragraph least, so it reads as a soft lean, not a block sliding.
+//   - Distance shaping. The pull grows from zero right under the cursor (no
+//     snapping when you cross a step), is strongest a short way off, and fades
+//     with distance, so the nearest step reacts most and the others follow.
+//   - A spring, not an easing curve. Every frame chases the target with a
+//     slightly under-damped spring, so it trails the mouse, never stops dead,
+//     and settles back with the smallest overshoot when the mouse leaves.
+//   - Mouse only, motion allowed only, and the loop sleeps once settled.
+(function () {
+  var root = document.documentElement;
+  var section = document.getElementById('process');
+  var list = section && section.querySelector('.steps');
+  if (!list || !root.classList.contains('anim')) return;
+  var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+  var MAX = 12;          // px, the most the circle moves
+  var REACH = 300;       // px, the distance at which the pull is strongest
+  var STIFFNESS = 170;   // spring: higher follows more tightly
+  var DAMPING = 19;      // spring: lower wobbles more (≈0.73 of critical)
+  var LAYERS = [['.step-num', 1], ['h3', 0.55], ['p', 0.3]];
+
+  // The line between the circles is a string, simulated as a chain of points
+  // pinned to the circle centres. Each point is pulled toward its neighbours
+  // (the wave equation), so when a circle moves the string doesn't just redraw
+  // straight: the middle lags, bends and ripples back into line. The cursor
+  // also bows it gently, and sweeping the mouse across it plucks it.
+  var SEGS = 14;            // links per span
+  var TENSION = 4200;       // tighter and faster with more (≈2.5 wobbles a second)
+  var STRING_DAMPING = 2.7; // rings longer with less (a pluck fades in about a second)
+  var STIFF_DAMPING = 7;    // internal friction: kills small ripples fast, so the
+                            // string always moves in smooth arcs, never squiggles
+  var STRING_PULL = 70;     // how far the cursor bows the string toward itself
+  var PLUCK = 0.3;          // share of the mouse's speed handed to the string
+  var PLUCK_MAX = 260;      // px/s, so a flick can never throw it wildly
+  var PLUCK_WIDTH = 64;     // px, how much of the string a pluck catches
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+  var svg = section.querySelector('.steps-string');
+
+  var steps = Array.prototype.map.call(list.querySelectorAll('.step'), function (li) {
+    return {
+      li: li,
+      anchor: li.querySelector('.step-num'),
+      parts: LAYERS.map(function (l) { return { el: li.querySelector(l[0]), depth: l[1] }; })
+        .filter(function (p) { return p.el; }),
+      x: 0, y: 0, vx: 0, vy: 0
+    };
+  });
+
+  var spans = [];
+  if (svg) {
+    for (var n = 0; n < steps.length - 1; n++) {
+      var path = document.createElementNS(SVG_NS, 'path');
+      path.setAttribute('pathLength', '1');      // lets CSS draw it across at any length
+      svg.appendChild(path);
+      spans.push({ path: path, a: steps[n], b: steps[n + 1], pts: null, side: null });
+    }
+    svg.parentNode.classList.add('is-strung');
+  }
+
+  var mouse = null;      // last pointer position (viewport), null when outside
+  var mouseV = 0;        // vertical mouse speed, px/s, for plucking
+  var lastMove = 0;
+  var raf = 0;
+  var last = 0;
+  var aliveUntil = 0;    // keep animating at least until then (entrance rise)
+  var reset = true;      // re-lay the strings straight (first frame, resize)
+
+  // pull vector for a cursor offset (dx, dy): linear near zero, peaks at REACH,
+  // then falls off, i.e. offset * 2*MAX/REACH / (1 + (d/REACH)^2)
+  function pull(dx, dy) {
+    var u2 = (dx * dx + dy * dy) / (REACH * REACH);
+    var k = (2 * MAX / REACH) / (1 + u2);
+    return [dx * k, dy * k];
+  }
+
+  function write(s) {
+    var still = Math.abs(s.x) < 0.01 && Math.abs(s.y) < 0.01;
+    s.parts.forEach(function (p) {
+      p.el.style.transform = still ? '' :
+        'translate(' + (s.x * p.depth).toFixed(2) + 'px,' + (s.y * p.depth).toFixed(2) + 'px)';
+    });
+  }
+
+  // smooth curve through the points (Catmull-Rom as cubic Béziers)
+  function curve(p) {
+    var d = 'M' + p[0].x.toFixed(2) + ' ' + p[0].y.toFixed(2);
+    for (var i = 0; i < p.length - 1; i++) {
+      var p0 = p[Math.max(0, i - 1)], p1 = p[i], p2 = p[i + 1], p3 = p[Math.min(p.length - 1, i + 2)];
+      d += 'C' + (p1.x + (p2.x - p0.x) / 6).toFixed(2) + ' ' + (p1.y + (p2.y - p0.y) / 6).toFixed(2) +
+           ' ' + (p2.x - (p3.x - p1.x) / 6).toFixed(2) + ' ' + (p2.y - (p3.y - p1.y) / 6).toFixed(2) +
+           ' ' + p2.x.toFixed(2) + ' ' + p2.y.toFixed(2);
+    }
+    return d;
+  }
+
+  // one span of string for one frame; returns true while it is still moving
+  function stepString(sp, dt, mx, my) {
+    var A = sp.a.pos, B = sp.b.pos, RA = sp.a.rest, RB = sp.b.rest;
+    var p = sp.pts, i;
+    if (!p || reset) {
+      p = sp.pts = [];
+      for (i = 0; i <= SEGS; i++) {
+        p.push({ x: A.x + (B.x - A.x) * i / SEGS, y: A.y + (B.y - A.y) * i / SEGS, vx: 0, vy: 0, fx: 0, fy: 0 });
+      }
+    }
+
+    // the cursor's steady pull on each point, measured from where the string rests
+    for (i = 1; i < SEGS; i++) {
+      p[i].fx = p[i].fy = 0;
+      if (mx === null) continue;
+      var t = pull(mx - (RA.x + (RB.x - RA.x) * i / SEGS), my - (RA.y + (RB.y - RA.y) * i / SEGS));
+      p[i].fx = t[0] * STRING_PULL;
+      p[i].fy = t[1] * STRING_PULL;
+    }
+
+    // pluck: the mouse crossed the string between two frames
+    if (mx !== null && mx > A.x && mx < B.x) {
+      var k = Math.min(SEGS - 1, Math.floor((mx - A.x) / (B.x - A.x) * SEGS));
+      var f = (mx - p[k].x) / ((p[k + 1].x - p[k].x) || 1);
+      var gap = my - (p[k].y + (p[k + 1].y - p[k].y) * f);
+      var side = gap > 0 ? 1 : -1;
+      if (sp.side !== null && side !== sp.side && Math.abs(gap) < 40) {
+        var kick = Math.max(-PLUCK_MAX, Math.min(PLUCK_MAX, mouseV * PLUCK));
+        for (i = 1; i < SEGS; i++) {
+          var dx = p[i].x - mx;
+          p[i].vy += kick * Math.exp(-dx * dx / (2 * PLUCK_WIDTH * PLUCK_WIDTH));
+        }
+      }
+      sp.side = side;
+    } else {
+      sp.side = null;
+    }
+
+    // integrate in small sub-steps so the stiff string stays stable
+    var subs = Math.ceil(dt / 0.004), h = dt / subs, moving = false;
+    for (var s = 0; s < subs; s++) {
+      p[0].x = A.x; p[0].y = A.y;
+      p[SEGS].x = B.x; p[SEGS].y = B.y;
+      p[0].vx = p[0].vy = p[SEGS].vx = p[SEGS].vy = 0;
+      for (i = 1; i < SEGS; i++) {
+        var q = p[i], l = p[i - 1], r = p[i + 1];
+        q.ax = TENSION * (l.x - 2 * q.x + r.x) + q.fx - STRING_DAMPING * q.vx +
+               STIFF_DAMPING * (l.vx - 2 * q.vx + r.vx);
+        q.ay = TENSION * (l.y - 2 * q.y + r.y) + q.fy - STRING_DAMPING * q.vy +
+               STIFF_DAMPING * (l.vy - 2 * q.vy + r.vy);
+      }
+      for (i = 1; i < SEGS; i++) {
+        p[i].vx += p[i].ax * h; p[i].vy += p[i].ay * h;
+        p[i].x += p[i].vx * h; p[i].y += p[i].vy * h;
+      }
+    }
+    for (i = 1; i < SEGS; i++) {
+      if (Math.abs(p[i].vx) > 0.4 || Math.abs(p[i].vy) > 0.4 ||
+          Math.abs(p[i].ax) > 4 || Math.abs(p[i].ay) > 4) { moving = true; break; }
+    }
+    sp.path.setAttribute('d', curve(p));
+    return moving;
+  }
+
+  function frame(now) {
+    var dt = Math.min(0.032, (now - last) / 1000 || 0.016);
+    last = now;
+    if (now - lastMove > 60) mouseV = 0;         // a resting mouse plucks nothing
+    var moving = now < aliveUntil;
+    var o = svg ? svg.getBoundingClientRect() : { left: 0, top: 0 };
+    var mx = mouse ? mouse[0] - o.left : null;   // cursor in the string's coordinates
+    var my = mouse ? mouse[1] - o.top : null;
+
+    steps.forEach(function (s) {
+      // the circle's centre as drawn, and its resting centre (minus what we added)
+      var r = s.anchor.getBoundingClientRect();
+      var cx = r.left + r.width / 2 - o.left, cy = r.top + r.height / 2 - o.top;
+      s.rest = { x: cx - s.x, y: cy - s.y };
+      var tx = 0, ty = 0;
+      if (mouse) {
+        var t = pull(mx - s.rest.x, my - s.rest.y);
+        tx = t[0]; ty = t[1];
+      }
+      s.vx += (STIFFNESS * (tx - s.x) - DAMPING * s.vx) * dt;
+      s.vy += (STIFFNESS * (ty - s.y) - DAMPING * s.vy) * dt;
+      s.x += s.vx * dt;
+      s.y += s.vy * dt;
+      if (Math.abs(tx - s.x) > 0.02 || Math.abs(ty - s.y) > 0.02 ||
+          Math.abs(s.vx) > 0.02 || Math.abs(s.vy) > 0.02) moving = true;
+      else if (!mouse) { s.x = s.y = s.vx = s.vy = 0; }
+      write(s);
+      s.pos = { x: s.rest.x + s.x, y: s.rest.y + s.y };
+    });
+
+    spans.forEach(function (sp) {
+      if (stepString(sp, dt, mx, my)) moving = true;
+    });
+    reset = false;
+
+    if (moving) raf = requestAnimationFrame(frame);
+    else { raf = 0; list.classList.remove('is-pulling'); }
+  }
+
+  function wake() {
+    if (raf) return;
+    list.classList.add('is-pulling');
+    last = performance.now();
+    raf = requestAnimationFrame(frame);
+  }
+
+  section.addEventListener('pointermove', function (e) {
+    if (e.pointerType !== 'mouse' || !finePointer.matches) return;
+    var now = performance.now();
+    if (mouse && now > lastMove) {
+      // smoothed vertical speed, so one jittery event can't fling the string
+      var v = (e.clientY - mouse[1]) / ((now - lastMove) / 1000);
+      mouseV = mouseV * 0.4 + v * 0.6;
+    }
+    lastMove = now;
+    mouse = [e.clientX, e.clientY];
+    wake();
+  });
+  section.addEventListener('pointerleave', function () {
+    if (!mouse) return;
+    mouse = null;
+    wake();
+  });
+  // the page can scroll under a resting mouse; the targets move with it
+  window.addEventListener('scroll', function () { if (mouse) wake(); }, { passive: true });
+  window.addEventListener('resize', function () { reset = true; wake(); });
+
+  // Entrance: a span draws itself across once both of its circles are in, and
+  // the strings keep simulating while the steps rise, so they get carried up
+  // with them instead of snapping into place afterwards.
+  function revealed() {
+    spans.forEach(function (sp) {
+      if (sp.b.li.classList.contains('in') && sp.a.li.classList.contains('in')) sp.path.classList.add('on');
+    });
+    aliveUntil = performance.now() + 1600;
+    wake();
+  }
+  if (spans.length && 'MutationObserver' in window) {
+    var mo = new MutationObserver(revealed);
+    steps.forEach(function (s) { mo.observe(s.li, { attributes: true, attributeFilter: ['class'] }); });
+  }
+  revealed();
+})();
+
 // Recent work carousel (see styles.css). One project is in the foreground, its
 // neighbours sit behind it on either side. The list is not circular: when
 // there would be two cards on one side, only the nearest is shown and the other

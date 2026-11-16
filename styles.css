@@ -12,10 +12,16 @@
   --white: #FFFFFF;
   --ink: #0E1A33;
   --stone: #F3F0EA;
+  --tint: #E4EAF5;     /* pale navy wash, only for hover highlights */
 
   --ink-soft: rgba(14, 26, 51, 0.74);
-  --rule: rgba(14, 26, 51, 0.14);
-  --shadow: 0 18px 40px rgba(14, 26, 51, 0.14);
+  --rule: rgba(14, 26, 51, 0.1);
+  --shadow: 0 12px 32px rgba(14, 26, 51, 0.1);
+  --shadow-lift: 0 16px 40px rgba(14, 26, 51, 0.14);
+
+  /* one easing curve for every UI transition (the name dock and carousel
+     slide keep their own tuned paths) */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
 
   --serif: 'Playfair Display', Georgia, serif;
   --sans: 'Jost', Helvetica, Arial, sans-serif;
@@ -45,6 +51,9 @@ body {
 }
 
 a { color: inherit; text-decoration: none; }
+
+/* in-page links land below the sticky nav */
+[id] { scroll-margin-top: var(--nav-h); }
 img { max-width: 100%; }
 [hidden] { display: none !important; }
 
@@ -66,7 +75,7 @@ img { max-width: 100%; }
 .skip-link:focus { top: 1rem; }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -76,26 +85,32 @@ img { max-width: 100%; }
   display: inline-block;
   background: var(--ink);
   color: var(--white);
-  padding: 1.05rem 2.2rem;
+  padding: 0.75rem 1.5rem;
   border-radius: 10px;
   font-family: var(--sans);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  font-size: 1rem;
+  line-height: 1.25rem;
+  font-weight: 500;
   border: 2px solid var(--ink);
   cursor: pointer;
-  transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease;
+  transition:
+    background-color 160ms var(--ease),
+    border-color 160ms var(--ease),
+    color 160ms var(--ease),
+    transform 120ms var(--ease);
 }
 
 .btn:hover,
 .btn:focus-visible {
   background: var(--stone);
   color: var(--ink);
-  transform: translateY(-2px);
 }
+.btn:active { transform: scale(0.98); }
 
-.btn-small { padding: 0.7rem 1.4rem; }
+.btn-small {
+  padding: 0.375rem 1rem;
+  font-size: 0.9375rem;
+}
 
 /* Inverted button for the navy closing band */
 .btn-light {
@@ -111,12 +126,11 @@ img { max-width: 100%; }
 
 .text-link {
   display: inline-block;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  font-size: 0.9375rem;
+  font-weight: 500;
   border-bottom: 2px solid var(--rule);
   padding-bottom: 2px;
-  transition: border-color 0.2s ease;
+  transition: border-color 160ms var(--ease);
 }
 a:hover > .text-link,
 a:focus-visible > .text-link,
@@ -133,6 +147,15 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   border-bottom: 1px solid var(--rule);
 }
 
+/* frosted bar: the page softly shows through as it scrolls underneath */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .topnav {
+    background: rgba(255, 255, 255, 0.88);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+}
+
 .topnav-inner {
   max-width: 82rem;
   margin: 0 auto;
@@ -147,7 +170,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 .nav-brand {
   white-space: nowrap;
   font-family: var(--serif);
-  font-weight: 700;
+  font-weight: 500;
   font-size: 1.25rem;
   letter-spacing: 0.01em;
 }
@@ -162,24 +185,23 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 }
 
 .nav-link {
-  font-size: 0.8rem;
+  font-size: 0.9375rem;
   font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding-bottom: 3px;
-  border-bottom: 2px solid transparent;
-  transition: border-color 0.2s ease;
+  padding-bottom: 4px;
+  /* underline draws in from the left on hover */
+  background: linear-gradient(currentColor, currentColor) 0 100% / 0 2px no-repeat;
+  transition: background-size 300ms var(--ease);
 }
 .nav-link:hover,
 .nav-link:focus-visible,
-.nav-link[aria-current="page"] { border-bottom-color: var(--ink); }
+.nav-link[aria-current="page"] { background-size: 100% 2px; }
 
 /* ---------- SECTION SHELL ---------- */
 
 .section {
   width: 100%;
   background: var(--white);
-  padding: 5.5rem 2rem;
+  padding: 6rem 2rem;
 }
 .section-stone { background: var(--stone); }
 .section-ink {
@@ -192,17 +214,19 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 
 .section-heading {
   font-family: var(--serif);
-  font-weight: 700;
+  font-weight: 500;
   font-size: clamp(2.1rem, 3.6vw, 3.1rem);
   line-height: 1.08;
   margin: 0 0 1.75rem;
   text-wrap: balance;
 }
 .section-heading-center { text-align: center; }
+/* a heading with an intro line under it sits closer to that line */
+.section-heading:has(+ .section-lede, + .contact-lede) { margin-bottom: 1rem; }
 
 .body-text {
-  font-size: 1.05rem;
-  line-height: 1.75;
+  font-size: 1.0625rem;
+  line-height: 1.75rem;
   margin: 0 0 1.25rem;
   max-width: 40rem;
 }
@@ -238,24 +262,22 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 
 .hero-name {
   font-family: var(--serif);
-  font-weight: 700;
+  font-weight: 500;
   font-size: clamp(2.9rem, 6.4vw, 5.2rem);
   line-height: 1.02;
-  margin: 0 0 1.1rem;
+  margin: 0 0 1rem;
   text-wrap: balance;
 }
 
 .hero-subheading {
-  font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+  font-size: clamp(1.0625rem, 1.6vw, 1.3125rem);
   font-weight: 500;
-  letter-spacing: 0.04em;
-  margin: 0 0 0.4rem;
+  letter-spacing: 0.01em;
+  margin: 0 0 0.25rem;
 }
 
 .hero-tagline {
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: clamp(1.15rem, 1.8vw, 1.45rem);
+  font-size: clamp(1.0625rem, 1.6vw, 1.3125rem);
   color: var(--ink-soft);
   margin: 0;
 }
@@ -278,7 +300,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
      stretching. If it doesn't, it is only as tall as the photo and the
      sticky image has no room to travel. */
   align-self: stretch;
-  animation: fadeInUp 0.9s ease 0.1s both;
+  animation: fadeInUp 500ms var(--ease) 0.1s both;
 }
 
 /* The portrait is a transparent cutout cropped at the chest. No frame, panel
@@ -301,28 +323,125 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   object-fit: contain;
 }
 
-/* ---------- PORTFOLIO ---------- */
+/* ---------- SERVICES ---------- */
 
-.work-grid {
+.section-lede {
+  text-align: center;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: 0 auto 3rem;
+  max-width: 34rem;
+}
+
+.service-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2.5rem;
+  gap: 1.5rem;
 }
+
+.service-card {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 2rem;
+  border-top: 2px solid var(--ink);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+}
+/* same hover as the cards on docbrianna.com: lifts a little, casts a soft
+   shadow and fills with a tint. Mouse only, so a tap on a phone doesn't leave
+   a card stuck highlighted. */
+@media (hover: hover) {
+  .service-card:hover {
+    box-shadow: var(--shadow);
+    background: var(--tint);
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .service-card:hover { transform: translateY(-4px); }
+}
+.service-card h3 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem;
+}
+.service-card p {
+  margin: 0;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+
+/* ---------- HOW IT WORKS ---------- */
+
+.steps {
+  list-style: none;
+  margin: 3rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+}
+.step {
+  position: relative;
+  text-align: center;
+  padding: 0 0.5rem;
+}
+/* connector line, running from this circle to the next one */
+.step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: 1.625rem;
+  left: 50%;
+  width: calc(100% + 2rem);
+  height: 1px;
+  background: var(--rule);
+}
+.step-num {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin: 0 auto 1.25rem;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--white);
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+.step h3 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem;
+}
+.step p {
+  margin: 0 auto;
+  max-width: 17rem;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+.steps-cta { text-align: center; margin: 3rem 0 0; }
+
+/* ---------- PORTFOLIO ---------- */
 
 .work-card {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.25rem;
 }
 
 .work-card h3 {
   font-family: var(--serif);
+  font-weight: 500;
   font-size: 1.5rem;
-  margin: 1.1rem 0 0;
+  margin: 1rem 0 0;
 }
 
 .work-card p {
-  margin: 0 0 0.9rem;
+  margin: 0 0 1rem;
   line-height: 1.6;
   color: var(--ink-soft);
 }
@@ -334,33 +453,30 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   border-radius: 12px;
   overflow: hidden;
   box-shadow: var(--shadow);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: box-shadow 180ms var(--ease);
 }
 .work-card:hover .browser,
-.work-card:focus-visible .browser {
-  transform: translateY(-4px);
-  box-shadow: 0 24px 48px rgba(14, 26, 51, 0.2);
-}
+.work-card:focus-visible .browser { box-shadow: var(--shadow-lift); }
 
 .browser-bar {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.65rem 0.9rem;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--rule);
 }
 .browser-bar span {
-  width: 0.6rem;
-  height: 0.6rem;
+  width: 0.625rem;
+  height: 0.625rem;
   border-radius: 50%;
   background: var(--rule);
 }
 .browser-bar em {
   font-style: normal;
   font-size: 0.75rem;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.01em;
   color: var(--ink-soft);
-  margin-left: 0.6rem;
+  margin-left: 0.5rem;
 }
 
 .browser img {
@@ -374,11 +490,14 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 
 /* ---------- CLOSING CTA ---------- */
 
-.cta-section { text-align: center; padding: 6rem 2rem; }
+.cta-section {
+  text-align: center;
+  padding: 6rem 2rem;
+}
 
 .cta-heading {
   font-family: var(--serif);
-  font-weight: 700;
+  font-weight: 500;
   font-size: clamp(2rem, 3.6vw, 3rem);
   line-height: 1.12;
   margin: 0 0 2rem;
@@ -392,45 +511,38 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   font-size: 1.1rem;
   line-height: 1.6;
   color: var(--ink-soft);
-  margin: -0.5rem auto 3rem;
+  margin: 0 auto 3rem;
   max-width: 34rem;
 }
 
 .contact-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
   align-items: stretch;
 }
 
 .contact-card {
   background: var(--stone);
   border-radius: 14px;
-  padding: 2.5rem 2rem;
+  padding: 2rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.9rem;
-  /* Same motion language as the rest of the site: fade up on load (staggered),
-     lift with a deeper shadow on hover. "backwards" fill, not "both", so the
-     finished animation does not pin the transform and block the hover lift. */
-  animation: fadeInUp 0.7s ease backwards;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  gap: 1rem;
+  /* fades up once on load, the cards a beat apart */
+  animation: fadeInUp 500ms var(--ease) backwards;
 }
 
-.contact-card:nth-child(2) { animation-delay: 0.14s; }
+.contact-card:nth-child(2) { animation-delay: 60ms; }
+.contact-card:nth-child(3) { animation-delay: 120ms; }
 
-.contact-card:hover,
-.contact-card:focus-within {
-  transform: translateY(-6px);
-  box-shadow: 0 24px 48px rgba(14, 26, 51, 0.16);
-}
-
-.contact-lede { animation: fadeInUp 0.7s ease 0.07s backwards; }
+.contact-lede { animation: fadeInUp 500ms var(--ease) backwards; }
 
 .contact-card h2 {
   font-family: var(--serif);
-  font-size: 1.8rem;
+  font-weight: 500;
+  font-size: 1.75rem;
   margin: 0;
 }
 
@@ -442,12 +554,16 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 
 .contact-card .btn { margin-top: auto; }
 
-.phone-number {
+/* the phone number and email address: lining figures so the digits sit on
+   the line (Playfair's default figures dip below it) */
+.contact-card .contact-detail {
   font-family: var(--serif);
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--ink) !important;
-  letter-spacing: 0.01em;
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--ink);
+  font-variant-numeric: lining-nums tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 /* Phones get the sms: button; desktops (where sms: does nothing useful)
@@ -460,16 +576,130 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
 
 .back-link { text-align: center; margin: 3rem 0 0; }
 
+/* ---------- 404 PAGE ----------
+   Fills the screen under the nav: a large serif 404 with the hero's short
+   rule, then three stone cards to useful places (same hover as "What I do").
+   Everything fades up once, a beat apart, like the contact cards. */
+
+.nf {
+  min-height: calc(100svh - var(--nav-h));
+  display: flex;
+  align-items: center;
+}
+.nf .section-inner { width: 100%; text-align: center; }
+
+.nf-code {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(5.5rem, 15vw, 10rem);
+  line-height: 0.9;
+  letter-spacing: 0.02em;
+  font-variant-numeric: lining-nums;   /* Playfair's default figures bob up and down */
+  margin: 0;
+}
+.nf .hero-rule { margin: 1.75rem auto 2rem; }
+.nf .section-lede { text-wrap: balance; }
+
+.nf-links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  max-width: 56rem;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.nf-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--stone);
+  border-radius: 14px;
+  border-top: 2px solid var(--ink);
+  padding: 1.75rem;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+}
+.nf-card h2 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.4rem;
+  margin: 0;
+}
+.nf-card p { margin: 0; line-height: 1.6; color: var(--ink-soft); text-wrap: pretty; }
+.nf-card .text-link { margin-top: auto; padding-top: 0.5rem; align-self: flex-start; }
+
+@media (hover: hover) {
+  .nf-card:hover { box-shadow: var(--shadow); background: var(--tint); }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .nf-card:hover { transform: translateY(-4px); }
+}
+
+.nf .section-inner > *,
+.nf-card { animation: fadeInUp 500ms var(--ease) backwards; }
+.nf .hero-rule { animation: draw 500ms var(--ease) 0.12s backwards; }
+.nf .section-heading { animation-delay: 0.08s; }
+.nf .section-lede { animation-delay: 0.14s; }
+.nf-links { animation: none !important; }
+.nf-card:nth-child(1) { animation-delay: 0.2s; }
+.nf-card:nth-child(2) { animation-delay: 0.26s; }
+.nf-card:nth-child(3) { animation-delay: 0.32s; }
+
+@media (max-width: 860px) {
+  .nf { min-height: 0; }
+  .nf-links { grid-template-columns: minmax(0, 1fr); max-width: 30rem; }
+}
+
 /* ---------- FOOTER ---------- */
 
 .footer {
   border-top: 1px solid var(--rule);
-  padding: 2rem;
-  text-align: center;
-  font-size: 0.85rem;
+  padding: 3rem 2rem 2rem;
+  font-size: 0.875rem;
   color: var(--ink-soft);
 }
 .footer p { margin: 0; }
+.footer-email { margin-top: 0.75rem; color: var(--ink); }
+
+.footer-inner {
+  max-width: 68rem;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+.footer-name {
+  display: inline-block;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.25rem;
+  color: var(--ink);
+  margin-bottom: 0.25rem;
+}
+.footer-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 1.75rem;
+}
+.footer-nav a {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--ink);
+  padding-bottom: 4px;
+  background: linear-gradient(currentColor, currentColor) 0 100% / 0 2px no-repeat;
+  transition: background-size 300ms var(--ease);
+}
+.footer-nav a:hover,
+.footer-nav a:focus-visible { background-size: 100% 2px; }
+.footer-copy {
+  max-width: 68rem;
+  margin: 2.5rem auto 0 !important;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+}
 
 /* ---------- RESPONSIVE ---------- */
 
@@ -501,13 +731,31 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   }
 
   .section { padding: 4rem 1.5rem; }
-  .work-grid,
-  .contact-grid { grid-template-columns: minmax(0, 1fr); }
+  .service-grid { grid-template-columns: minmax(0, 1fr); }
   .cta-section { padding: 4.5rem 1.5rem; }
+
+  .steps { grid-template-columns: minmax(0, 1fr); gap: 2.25rem; }
+  .step:not(:last-child)::before { display: none; }
+
+  .footer { padding: 2.5rem 1.5rem 1.75rem; }
+  .footer-inner { flex-direction: column; gap: 1.5rem; }
+  .footer-nav ul { flex-wrap: wrap; gap: 0.75rem 1.5rem; }
+}
+
+/* three contact cards need the full width; below that they stack */
+@media (max-width: 1080px) {
+  .contact-grid {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 36rem;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .nav-sec { display: none; }
 }
 
 @media (max-width: 480px) {
-  .nav-link-work { display: none; }
   .nav-brand { font-size: 1.1rem; }
 }
 
@@ -592,7 +840,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   top: 0;
   white-space: nowrap;
   font-family: var(--serif);
-  font-weight: 700;
+  font-weight: 500;
   line-height: normal;
   color: var(--ink);
   transform-origin: 0 0;
@@ -752,7 +1000,7 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   padding: 0;
   cursor: pointer;
   pointer-events: auto;
-  transition: transform 0.25s ease, opacity 0.25s ease;
+  transition: transform 160ms var(--ease), opacity 160ms var(--ease);
 }
 .car-prev { left: calc(50% - 50vw + 1.5rem); }
 .car-next { right: calc(50% - 50vw + 1.5rem); }
@@ -805,6 +1053,8 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
     left: 0;
     right: 0;
     background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
   .anim .home .nav-bg {
     display: block;
@@ -812,6 +1062,13 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
     inset: 0;
     background: var(--white);
     opacity: 0;
+  }
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .anim .home .nav-bg {
+      background: rgba(255, 255, 255, 0.8);
+      -webkit-backdrop-filter: saturate(180%) blur(18px);
+      backdrop-filter: saturate(180%) blur(18px);
+    }
   }
   .anim .home .topnav-inner { position: relative; justify-content: center; }
   /* the whole menu leaves the bar (not just its links), so no empty flex gap
@@ -871,6 +1128,92 @@ a.text-link:focus-visible { border-bottom-color: var(--ink); }
   animation: dock-bar linear both;
   animation-timeline: scroll(root block);
   animation-range: 0px var(--dock-d);
+}
+
+/* ---------- ENTRANCE MOTION ----------
+   Only with html.anim (JS on, reduced motion off), so nothing is ever hidden
+   for anyone who can't or doesn't want to see it move.
+   Hero: the lines under the name settle in one after another, and the short
+   rule draws itself. The h1 is left alone: script.js measures it.
+   Below the hero: script.js adds .reveal to headings, cards and steps and
+   .in once each scrolls into view. The rise uses the separate `translate`
+   property, so it never fights the cards' own hover `transform`. */
+
+@keyframes rise { from { opacity: 0; translate: 0 12px; } to { opacity: 1; translate: 0 0; } }
+@keyframes draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.anim .hero-subheading { animation: rise 500ms var(--ease) 0.2s backwards; }
+.anim .hero-tagline    { animation: rise 500ms var(--ease) 0.26s backwards; }
+.anim .hero-rule       { transform-origin: left; animation: draw 500ms var(--ease) 0.32s backwards; }
+.anim .hero .btn       { animation: rise 500ms var(--ease) 0.38s backwards; }
+
+.anim .reveal {
+  opacity: 0;
+  translate: 0 12px;
+  transition:
+    opacity 500ms var(--ease) var(--d, 0s),
+    translate 500ms var(--ease) var(--d, 0s),
+    transform 120ms var(--ease),
+    background-color 160ms var(--ease),
+    border-color 160ms var(--ease),
+    color 160ms var(--ease);
+}
+.anim .reveal.in { opacity: 1; translate: 0 0; }
+
+/* service cards keep their slower docbrianna-style hover alongside the rise */
+.anim .service-card.reveal {
+  transition:
+    opacity 500ms var(--ease) var(--d, 0s),
+    translate 500ms var(--ease) var(--d, 0s),
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    background-color 0.25s ease;
+}
+
+/* how it works: the line between the circles draws across after each step lands */
+.anim .step:not(:last-child)::before {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 600ms var(--ease) calc(var(--d, 0s) + 0.2s);
+}
+.anim .step.in::before { transform: scaleX(1); }
+
+/* how it works: the steps lean toward the mouse (script.js writes the
+   transforms). Experimental: to remove it, delete the "steps lean toward the
+   mouse" block in script.js; nothing here needs to change. */
+.steps.is-pulling .step-num,
+.steps.is-pulling .step h3,
+.steps.is-pulling .step p { will-change: transform; }
+
+/* the string: an SVG layer behind the circles (the circles' white fill hides
+   its ends). Once script.js takes over (.is-strung) the CSS lines go away.
+   Each span draws itself across, like the old line, once both of its circles
+   have risen into place. */
+.steps-wrap { position: relative; }
+.steps-string { display: none; }
+.is-strung .steps-string {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.is-strung .step:not(:last-child)::before { display: none; }
+.steps-string path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-opacity: 0.16;
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 700ms var(--ease) 0.15s;
+}
+.steps-string path.on { stroke-dashoffset: 0; }
+@media (max-width: 860px) {
+  .is-strung .steps-string { display: none; }
 }
 
 .td .name-float .nf-word { transition: transform 0.55s cubic-bezier(0.3, 0.7, 0.2, 1); }
