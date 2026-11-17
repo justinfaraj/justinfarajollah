@@ -5,7 +5,7 @@
 // which shows). "Email me" opens a draft with the subject and message filled
 // in, and so does the footer's "Email me" link on every page.
 (function () {
-  var MESSAGE = "Hey Justin, I'm looking to build a site";                 // the text message
+  var MESSAGE = "Hey Justin, I'm looking to build a site. Can we chat?";               // the text message
   var SUBJECT = 'Website Inquiry';                                         // the email's subject line
   // the email, laid out like an email: greeting, a blank line, then the message
   var EMAIL_BODY = "Hey Justin,\r\n\r\nI'm looking to build a site. Can we chat?";
