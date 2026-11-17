@@ -259,9 +259,12 @@ var c=document.documentElement.classList;c.add("js");if(!matchMedia("(prefers-re
 
       <!-- The line joining the circles. Without JS (or with reduced motion) it is
            drawn by CSS; with motion on, script.js draws it here as a string
-           that follows the circles and can be plucked. -->
+           that follows the circles and can be plucked. On phones script.js
+           draws .steps-trace instead: one line that winds from step to step
+           as you scroll. -->
       <div class="steps-wrap">
       <svg class="steps-string" aria-hidden="true" focusable="false"></svg>
+      <svg class="steps-trace" aria-hidden="true" focusable="false"></svg>
       <ol class="steps">
         <li class="step">
           <span class="step-num" aria-hidden="true">1</span>

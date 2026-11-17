@@ -710,6 +710,159 @@
   revealed();
 })();
 
+// Home page, "How it works", phones: one line threads the stacked steps and
+// ends at the "Start with a chat" button. It leaves circle 1 to the right,
+// runs down the right side of step 1's text, turns in to circle 2, leaves it
+// to the left, runs down the left side of step 2's text, turns in to circle 3,
+// leaves it to the right again and turns in to the button's right end. Every
+// turn is a rounded corner.
+// Scrolling is the only thing that draws it: the tip advances a fixed amount
+// per pixel scrolled, and scrolling back up undraws it at the same rate.
+// Desktop keeps the string above (styles.css shows each at its own widths).
+// To remove it, delete this block and the .steps-trace svg in index.html.
+(function () {
+  var root = document.documentElement;
+  var section = document.getElementById('process');
+  var wrap = section && section.querySelector('.steps-wrap');
+  var svg = wrap && wrap.querySelector('.steps-trace');
+  if (!svg || !root.classList.contains('anim')) return;
+  var steps = wrap.querySelectorAll('.step');
+  if (steps.length !== 3) return;
+  var phone = window.matchMedia('(max-width: 860px)');
+
+  var GAP = 16;      // px between the widest text and the line
+  var CORNER = 16;   // px, radius of every turn
+  var START = 0.75;  // drawing starts when circle 1 is this far down the screen
+  var END = 0.45;    // and is complete when the button is this far down
+
+  var cta = section.querySelector('.steps-cta .btn');
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+  var paths = [];
+  for (var n = 0; n < (cta ? 3 : 2); n++) {
+    paths.push(svg.appendChild(document.createElementNS(SVG_NS, 'path')));
+  }
+  var geo = null;
+  var lastWidth = window.innerWidth;
+  var pending = false;
+
+  function r2(v) { return Math.round(v * 100) / 100; }
+
+  // circle centre and radius in .steps-wrap coordinates. Layout offsets, not
+  // screen rects, so the steps' entrance rise doesn't throw the numbers off.
+  function circle(li) {
+    var n = li.querySelector('.step-num');
+    return {
+      x: li.offsetLeft + n.offsetLeft + n.offsetWidth / 2,
+      y: li.offsetTop + n.offsetTop + n.offsetHeight / 2,
+      r: n.offsetWidth / 2
+    };
+  }
+
+  // an element's layout position in the page, ignoring transforms
+  function place(el) {
+    var x = 0, y = 0;
+    for (; el; el = el.offsetParent) { x += el.offsetLeft; y += el.offsetTop; }
+    return { x: x, y: y };
+  }
+
+  // the button's centre and half its width, also in .steps-wrap coordinates
+  // (it sits outside .steps-wrap, so measured through the page)
+  function button() {
+    var b = place(cta), w = place(wrap);
+    return {
+      x: b.x - w.x + cta.offsetWidth / 2,
+      y: b.y - w.y + cta.offsetHeight / 2,
+      r: cta.offsetWidth / 2
+    };
+  }
+
+  function measure() {
+    geo = null;
+    wrap.classList.toggle('is-traced', phone.matches);
+    if (!phone.matches) return;
+
+    var stops = Array.prototype.map.call(steps, circle);
+    if (cta) stops.push(button());
+    var a = stops[0];
+
+    // the line runs just outside the widest line of text in any step, the
+    // same distance out on both sides
+    var box = wrap.getBoundingClientRect();
+    var half = 0;
+    Array.prototype.forEach.call(steps, function (li) {
+      ['h3', 'p'].forEach(function (sel) {
+        var el = li.querySelector(sel);
+        if (!el) return;
+        var rg = document.createRange();
+        rg.selectNodeContents(el);
+        var t = rg.getBoundingClientRect();
+        half = Math.max(half, a.x - (t.left - box.left), (t.right - box.left) - a.x);
+      });
+    });
+    var k = CORNER, q = Math.PI * k / 2;   // corner radius, a quarter turn's length
+    var arc = ' ' + k + ' ' + k + ' 0 0 ';
+    var lengths = [], total = 0;
+
+    // one path per hop, alternating sides: right (turning clockwise), then
+    // left (anticlockwise), then right again
+    paths.forEach(function (path, i) {
+      var from = stops[i], to = stops[i + 1];
+      var s = i % 2 ? -1 : 1;                       // +1 right side, -1 left side
+      var x = a.x + s * (half + GAP);               // the side the line runs down
+      var x0 = from.x + s * from.r, x1 = to.x + s * to.r;
+      var sweep = s > 0 ? '1 ' : '0 ';
+      path.setAttribute('d',
+        'M' + r2(x0) + ' ' + r2(from.y) + 'H' + r2(x - s * k) +
+        'A' + arc + sweep + r2(x) + ' ' + r2(from.y + k) + 'V' + r2(to.y - k) +
+        'A' + arc + sweep + r2(x - s * k) + ' ' + r2(to.y) + 'H' + r2(x1));
+      var L = Math.abs(x - s * k - x0) + (to.y - from.y - 2 * k) + Math.abs(x - s * k - x1) + 2 * q;
+      // the gap is a pixel longer than the dash, so an undrawn line leaves no dot
+      path.style.strokeDasharray = r2(L) + ' ' + r2(L + 1);
+      lengths.push(L);
+      total += L;
+    });
+
+    // the screen height is taken once: phone toolbars change it mid-scroll,
+    // and the line should only ever move because you scrolled
+    geo = { y0: a.y, y1: stops[stops.length - 1].y, lengths: lengths, total: total, vh: window.innerHeight };
+    update();
+  }
+
+  function update() {
+    pending = false;
+    if (!geo) return;
+    var top = wrap.getBoundingClientRect().top;
+    var span = (geo.y1 - geo.y0) + (START - END) * geo.vh;
+    var t = (START * geo.vh - (top + geo.y0)) / span;
+    var left = Math.min(1, Math.max(0, t)) * geo.total;   // length still to hand out
+    paths.forEach(function (path, i) {
+      var L = geo.lengths[i], on = Math.min(left, L);
+      left -= on;
+      path.style.strokeDashoffset = r2(L - on);
+    });
+  }
+
+  function schedule() {
+    if (pending || !geo) return;
+    pending = true;
+    requestAnimationFrame(update);
+  }
+
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', function () {
+    // phone browsers fire resize whenever the toolbar slides; only a real
+    // change of width (rotation, window resize) changes the layout
+    if (window.innerWidth === lastWidth) return;
+    lastWidth = window.innerWidth;
+    measure();
+  });
+  if (phone.addEventListener) phone.addEventListener('change', measure);
+
+  // text widths depend on the web fonts, so measure once they're in
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+  else window.addEventListener('load', measure);
+})();
+
 // Recent work: stacking cards (see styles.css). Each project sits in a
 // full-height item that pins under the nav; the next one slides up over it
 // while the earlier cards shrink back, one after another. Ported from a
@@ -910,11 +1063,19 @@
   var DURATION = 550;                                 // original: 550 (ms), each way
   var EASING = 'cubic-bezier(0.76, 0, 0.24, 1)';      // original: cubic-bezier(0.76, 0, 0.24, 1)
   var SETTLE_PAD = 60;                                // original: 60 (ms)
+  // the top bar fades to the new theme from the moment of the press: a little
+  // longer than the curtain's fall, so it is still settling as the page returns
+  var FADE = 850;                                     // ms
+  var FADE_EASING = 'cubic-bezier(0.45, 0, 0.55, 1)'; // gentle in, gentle out
+  var FADE_TAIL = 'cubic-bezier(0.33, 0.67, 0.67, 1)';  // the last part of that same curve
 
   var root = document.documentElement;
   var btn = document.getElementById('theme-toggle');
   var curtain = document.getElementById('theme-curtain');
   if (!btn) return;
+  // what sits above the curtain and fades instead of waiting for it
+  var early = [document.querySelector('.topnav'), document.getElementById('name-float')]
+    .filter(Boolean);
 
   var meta = document.querySelector('meta[name="theme-color"]');
   // the head script keeps the light value here before it writes the dark one
@@ -955,24 +1116,39 @@
       return;
     }
 
-    // 1. falling: the sheet, already in the new theme's colour, wipes down
+    // 1. falling: the sheet, already in the new theme's colour, wipes down,
+    // and the top bar (above the sheet) starts fading to the new theme now
     phase = 'falling';
+    var pressed = performance.now();
+    root.style.setProperty('--theme-fade', FADE + 'ms ' + FADE_EASING);
+    root.style.setProperty('--theme-fade-color', FADE + 'ms ' + FADE_EASING);
+    root.classList.add('theme-fading');
+    early.forEach(function (el) { el.dataset.theme = target; });
     curtain.style.background = pageBg(target);
     void curtain.offsetHeight;                        // make the browser take that in before the motion starts
     curtain.style.transition = 'transform ' + DURATION + 'ms ' + EASING;
     curtain.style.transform = 'scaleY(1)';
 
     setTimeout(function () {
-      // 2. the page is covered: change the theme, then pull the sheet back up
+      // 2. the page is covered: change the theme, then pull the sheet back up.
+      // Chrome restarts the bar's text-colour fade at this moment, so a
+      // restart gets only what is left of the fade, on the tail of its curve
+      var rest = Math.max(0, Math.round(FADE - (performance.now() - pressed)));
+      root.style.setProperty('--theme-fade-color', rest + 'ms ' + FADE_TAIL);
       apply(target);
       save(target);
       phase = 'rising';
       curtain.style.transform = 'scaleY(0)';
 
       setTimeout(function () {
-        // 3. done
+        // 3. done: the page has caught up with the bar, which hands its
+        // colours back to the page (they now match, so nothing visibly changes)
         phase = 'idle';
         curtain.style.transition = 'none';
+        early.forEach(function (el) { delete el.dataset.theme; });
+        root.classList.remove('theme-fading');
+        root.style.removeProperty('--theme-fade');
+        root.style.removeProperty('--theme-fade-color');
       }, DURATION + SETTLE_PAD);
     }, DURATION);
   });

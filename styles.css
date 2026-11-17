@@ -8,7 +8,12 @@
      --stone  warm wash for alternating sections (never used for text)
    ========================================================================== */
 
-:root {
+/* The light tokens also answer to [data-theme="light"] (and the dark ones to
+   any [data-theme="dark"]), so one element can wear the other theme. The theme
+   switch uses that to start the top bar on its new colours straight away,
+   while the rest of the page waits under the curtain. */
+:root,
+[data-theme="light"] {
   color-scheme: light;
 
   /* the two page backgrounds. The theme curtain (script.js) reads these, so
@@ -57,7 +62,7 @@
    data-theme on <html>: the visitor's saved choice, or else their system
    setting. Everything on the page is drawn from the tokens, so redefining
    them here is the whole theme. Same navy family; never pure black or white. */
-:root[data-theme="dark"] {
+[data-theme="dark"] {
   color-scheme: dark;
 
   --white: var(--page-bg-dark);    /* page background */
@@ -156,7 +161,8 @@ img { max-width: 100%; }
   transition: border-color 500ms, background-color 500ms, color 500ms, box-shadow 500ms, transform 500ms;
 }
 .btn:hover,
-.btn:focus-visible {
+.btn:focus-visible,
+.btn:active {
   border-color: var(--ink);
   background: var(--ink);
   color: var(--white);
@@ -182,12 +188,26 @@ img { max-width: 100%; }
   color: var(--white);
 }
 /* ...and light on the navy closing band ("Let's talk") */
-.btn-light,
-.btn-light:hover,
-.btn-light:focus-visible {
+.btn-light {
   border-color: var(--band-fg);
   background: var(--band-fg);
   color: var(--band-bg);
+}
+/* Pressed or hovered, both swap fill for outline: the mirror image of the
+   outlined pills, which fill in. */
+.btn-solid:hover,
+.btn-solid:focus-visible,
+.btn-solid:active {
+  border-color: var(--ink);
+  background: transparent;
+  color: var(--ink);
+}
+.btn-light:hover,
+.btn-light:focus-visible,
+.btn-light:active {
+  border-color: var(--band-fg);
+  background: transparent;
+  color: var(--band-fg);
 }
 
 /* quiet links: "Visit ...", "Back to home", the footer links, the bar's links */
@@ -227,6 +247,7 @@ a.text-link:focus-visible,
   position: sticky;
   top: 0;
   z-index: 50;
+  color: var(--ink);             /* its own, so it can change theme ahead of the page */
   background: var(--white);
   border-bottom: 1px solid var(--rule);
   transition: background-color .3s ease, border-color .3s ease, color .3s ease;
@@ -1776,6 +1797,33 @@ html:not(.anim) .home .nav-brand { visibility: visible; }
   .is-strung .steps-string { display: none; }
 }
 
+/* phones: one line winds through the stacked steps, drawn by scrolling
+   (script.js builds it and sets how much is drawn). It leaves circle 1 to the
+   right, runs down beside step 1's text into circle 2, leaves that to the left,
+   runs down beside step 2's text into circle 3. The steps get a little more
+   side padding so the text keeps clear of it. */
+.steps-trace { display: none; }
+@media (max-width: 860px) {
+  .is-traced .steps-trace {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .is-traced .step { padding: 0 1.75rem; }
+}
+.steps-trace path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-opacity: 0.16;
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .td .name-float .nf-word { transition: transform 0.55s cubic-bezier(0.3, 0.7, 0.2, 1); }
 .td .nav-bg { transition: opacity 0.35s ease; }
 .td.td-instant .name-float .nf-word,
@@ -1832,3 +1880,31 @@ html:not(.anim) .home .nav-brand { visibility: visible; }
 .theme-toggle .theme-sun { display: none; }
 [data-theme="dark"] .theme-toggle .theme-sun { display: block; }
 [data-theme="dark"] .theme-toggle .theme-moon { display: none; }
+
+/* The top bar sits above the curtain, so rather than switching halfway it
+   fades to its new colours from the moment of the press. script.js sets
+   html.theme-fading and gives the bar (and the moving copy of the name, also
+   above the curtain) the new data-theme at once; these transitions carry every
+   colour in them across. script.js sets the timing (--theme-fade); the text
+   colour has its own (--theme-fade-color) because Chrome restarts it when the
+   page flips halfway, and script.js then hands the restart only the time that
+   is left. Opacity and transform keep their usual timings so nothing else in
+   the bar changes behaviour. */
+.theme-fading .topnav,
+.theme-fading .topnav *,
+.theme-fading .name-float .nf-word {
+  transition:
+    color var(--theme-fade-color),
+    background-color var(--theme-fade),
+    border-color var(--theme-fade),
+    text-decoration-color var(--theme-fade),
+    box-shadow var(--theme-fade),
+    opacity .35s ease,
+    transform 500ms;
+}
+/* phones without scroll-driven animations: the name keeps its own glide */
+.td.theme-fading .name-float .nf-word {
+  transition:
+    color var(--theme-fade-color),
+    transform 0.55s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
