@@ -973,6 +973,40 @@ a.text-link:focus-visible,
   transition: transform 500ms var(--lw-ease), color 500ms var(--lw-ease), opacity 500ms var(--lw-ease);
 }
 
+/* Radar ping: two thin rings slip out from the button every couple of
+   seconds so a first-time visitor sees it is the thing to press. They stop
+   while the group is hovered or focused (the hover look takes over), once it
+   is clicked, and for anyone who prefers reduced motion. */
+.js .lw-trigger::before,
+.js .lw-trigger::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  animation: lw-ping 2.4s cubic-bezier(.2, .6, .35, 1) 1.2s infinite;
+}
+.js .lw-trigger::after { animation-delay: 1.6s; }
+@keyframes lw-ping {
+  0%   { transform: scale(1);    opacity: .45; }
+  70%  { transform: scale(1.85); opacity: 0; }
+  100% { transform: scale(1.85); opacity: 0; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .js .lw-head:hover .lw-trigger::before,
+  .js .lw-head:hover .lw-trigger::after { animation: none; }
+}
+.js .lw-head:has(.lw-trigger:focus-visible) .lw-trigger::before,
+.js .lw-head:has(.lw-trigger:focus-visible) .lw-trigger::after,
+.lw.is-clicked .lw-trigger::before,
+.lw.is-clicked .lw-trigger::after { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .js .lw-trigger::before,
+  .js .lw-trigger::after { animation: none; }
+}
+
 /* the two short lines either side of the group */
 .lw-side {
   position: absolute;
